@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Built frontend files
+dist/
+
+# Local environment files (keep example files in Git)
+.env
+.env.*
+!.env.example
+
+# Logs and local operating-system files
+*.log
+.DS_Store
