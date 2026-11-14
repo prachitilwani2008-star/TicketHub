@@ -1,12 +1,12 @@
-# EventPass: Event Ticketing Platform
+# TicketHub: Event Ticketing Platform
 
-> Create events, sell limited tickets, get paid, and check people in with a unique QR code. Built in 15 days as Track A of **ALTA Builder 30**.
+> Discover events, reserve free tickets, and check attendees in with unique QR tickets. Built in 15 days as Track A of **ALTA Builder 30**.
 
 | | |
 |---|---|
 | **Type** | Full-stack web application |
-| **Status** | Day 1 of 15: planning complete |
-| **Stack** | React, Node.js/Express, PostgreSQL, Razorpay (test mode) |
+| **Status** | Day 3 of 15: schema and connection code added; database URL still needs configuration |
+| **Stack** | React, Node.js/Express, PostgreSQL (`pg`) |
 | **Live demo** | _coming on Day 14_ |
 | **Demo video** | _coming on Day 15_ |
 
@@ -14,15 +14,14 @@
 
 ## 1. Why this project exists
 
-**The problem.** College fests and local events usually sell tickets through Google Forms, UPI screenshots and spreadsheets. Organizers then face oversold seats, fake or duplicated tickets, manual payment checking and no live view of sales. Attendees get no reliable proof of purchase.
+**The problem.** College fests and local events often share details across messages, forms, and social posts. Attendees can miss reliable event information, while organizers must maintain reservation lists manually and risk accepting more reservations than their event can hold.
 
-**The solution.** EventPass puts the whole flow in one place. An organizer publishes an event with limited ticket types. An attendee pays online. The system confirms payment, issues a ticket with a unique QR code, and guarantees that the last seat can only be sold once.
+**The solution.** TicketHub puts event discovery and reservations in one place. An organizer publishes an event with a limited ticket quantity. An attendee reserves tickets and receives a booking reference and, later in the roadmap, a QR ticket. The booking flow checks availability so reservations respect event capacity.
 
 **What makes it useful.**
 - Seats can't be oversold, because stock is reduced in a single atomic database operation.
-- Tickets are issued only after the payment signature is verified.
 - Every ticket has its own QR token, so one ticket can be used only once.
-- Organizers see sales and revenue live.
+- Organizers can review event registrations and check-in status.
 
 ---
 
@@ -46,13 +45,13 @@
 5. Public event list with search, city/date filter and pagination
 6. Event detail page with live remaining quantity
 7. Booking with oversell protection (atomic stock update)
-8. Razorpay test-mode payment with server-side signature verification
+8. Free-ticket reservation with a booking confirmation and reference
 9. "My Tickets" page with a unique QR code per ticket
 10. Organizer dashboard: tickets sold and revenue per event
 
 ### Planned improvements
 - QR check-in screen for organizers (scan, mark used, reject duplicates)
-- Seat hold that expires after 10 minutes without payment
+- Attendee waitlist for sold-out events
 - Email confirmation with the ticket attached
 - Promo codes
 - Cancellation and refunds
@@ -65,11 +64,11 @@
 1. An organizer signs up, logs in, and creates an event with ticket types.
 2. An attendee browses events and opens one to see what is still available.
 3. The attendee picks a ticket type and quantity and clicks **Book**.
-4. The server atomically reserves the seats and creates a `PENDING` booking and a Razorpay order.
-5. The attendee pays in the Razorpay checkout.
-6. The server verifies the payment signature, marks the booking `PAID`, and generates one ticket per seat, each with a unique `qr_token`.
+4. The server checks availability, records the booking, and reduces the remaining ticket quantity.
+5. The attendee receives a booking confirmation and reference.
+6. The ticket flow creates one ticket record per reserved seat, each with a unique `qr_token`.
 7. The attendee opens **My Tickets** and shows the QR code at the gate.
-8. The organizer watches sales and revenue on the dashboard.
+8. The organizer reviews registrations and check-in status on the dashboard.
 
 ---
 
@@ -83,43 +82,35 @@ Express API (Node.js)
    routes → middleware (auth, role check, validation) → controllers → services
    │                                   │
    ▼                                   ▼
-PostgreSQL (via Prisma)          Razorpay (test mode)
-                                 create order → checkout → verify signature
+   PostgreSQL (node-postgres / pg)
+   schema: server/sql/schema.sql
 ```
 
-- **Frontend** only talks to the API. It never touches the database or payment secrets.
-- **Backend** is layered, with thin routes, logic in services, and all DB access through Prisma.
+- **Frontend** only talks to the API. It never connects directly to PostgreSQL or receives database credentials.
+- **Backend** is built with Express. It uses a PostgreSQL connection pool from `pg` and reads the initial schema from `server/sql/schema.sql`.
 - **Database** holds all state. Stock updates run inside a single atomic query.
-- **Payments** are verified on the server, never trusted from the browser.
 
 ### Database design
 
 | Table | Key fields | Relationships |
 |---|---|---|
-| `users` | id, name, email, password_hash, role | has many events (organizer), has many bookings (attendee) |
-| `events` | id, organizer_id, title, description, venue, city, starts_at, image_url | belongs to a user, has many ticket_types |
-| `ticket_types` | id, event_id, name, price, total_qty, sold_qty | belongs to an event |
-| `bookings` | id, user_id, event_id, status, amount, razorpay_order_id | belongs to a user and an event, has many tickets |
-| `tickets` | id, booking_id, ticket_type_id, qr_token, used | belongs to a booking and a ticket type |
+| `users` | user_id, name, email, password_hash, role | organizes events and makes bookings |
+| `events` | event_id, organizer_id, title, description, venue, city, starts_at, status | belongs to an organizer and has ticket types |
+| `ticket_types` | ticket_type_id, event_id, name, price, total_quantity, sold_quantity | belongs to an event and sets its capacity |
+| `bookings` | booking_id, attendee_id, event_id, ticket_type_id, quantity, booking_reference, status | belongs to an attendee, event, and ticket type |
+| `tickets` | ticket_id, booking_id, qr_token, is_used, checked_in_at | belongs to a booking; one row represents one ticket |
 
 ### Planned folder structure
 
 ```
-event-ticketing/
-├── docs/                 schema diagram, wireframes
+TicketHub/
+├── client/                 React and Vite frontend
+│   └── src/
 ├── server/
-│   ├── prisma/           schema.prisma
+│   ├── sql/schema.sql      PostgreSQL tables and indexes
 │   └── src/
-│       ├── routes/
-│       ├── middleware/   auth, role check, validation
-│       ├── controllers/
-│       ├── services/     booking, payment, ticket logic
-│       └── tests/
-├── client/
-│   └── src/
-│       ├── pages/
-│       ├── components/
-│       └── api/          axios calls
+│       ├── config/db.js    PostgreSQL connection pool
+│       └── scripts/        database check and setup commands
 ├── FEATURES.md
 └── README.md
 ```
@@ -133,12 +124,11 @@ event-ticketing/
 | JavaScript (Node.js) | Backend language |
 | Express | REST API framework |
 | PostgreSQL | Relational database, with transactions for safe booking |
-| Prisma | ORM and migrations |
+| node-postgres (`pg`) | PostgreSQL connection pool and SQL queries |
 | bcrypt, jsonwebtoken | Password hashing and authentication |
 | zod | Input validation |
 | React (Vite), React Router | Frontend UI and routing |
 | axios | API calls from the frontend |
-| Razorpay (test mode) | Payments |
 | qrcode | QR generation |
 | Jest, Supertest | API tests |
 | Vercel, Render, Neon | Hosting for frontend, backend and database |
@@ -150,27 +140,27 @@ event-ticketing/
 
 | Day | Focus | Expected outcome |
 |---|---|---|
-| 1 | Plan | Repo, `FEATURES.md`, README blueprint |
-| 2 | Design | Schema diagram and 4 wireframes in `/docs` |
-| 3 | Setup | Server running, DB connected, `/health` returns OK |
-| 4 | Signup API | Validation and hashed passwords, tested in Postman |
-| 5 | Login and JWT | Protected route returns 401 without a token |
-| 6 | Event CRUD | Organizer-only create, read, update, delete |
-| 7 | Ticket types and search | Related API plus paginated, filterable event list |
-| 8 | Frontend setup | Routing, layout, signup and login screens |
-| 9 | List and detail pages | Live data from the API |
-| 10 | CRUD screens | Organizer forms with loading and error states |
-| 11 | Booking and payment (backend) | Atomic stock update, Razorpay order, signature verification |
-| 12 | Booking and payment (UI) | Checkout, ticket generation, My Tickets with QR |
-| 13 | Testing | 5+ passing API tests, bug list cleared |
-| 14 | Deploy | Live URL that works on another device, secrets in env variables |
-| 15 | Ship | Final README, demo video, LinkedIn post |
+| 1 | README and roadmap | Project overview, problem, objectives, features, stack, and 15-day roadmap |
+| 2 | Project structure and setup | React/Vite and Express development servers start |
+| 3 | PostgreSQL database | SQL schema, relationships, connection pool, and database health check |
+| 4 | Authentication backend | Registration, login, password hashing, JWT, and role checks |
+| 5 | Login and registration UI | Users can register, sign in, and reach the correct pages |
+| 6 | Organizer event APIs | Organizers can create and manage their own events |
+| 7 | Organizer dashboard | Event forms and registration counts use the backend |
+| 8 | Public events and search | Visitors can browse events and open event details |
+| 9 | Ticket booking backend | Capacity checks and database transactions prevent overbooking |
+| 10 | Attendee booking interface | Attendees can reserve tickets and review booking history |
+| 11 | QR code ticket generation | Each booked ticket receives its own secure QR token |
+| 12 | My Tickets page | Attendees can view their bookings, ticket details, and QR codes |
+| 13 | QR ticket check-in | Organizers can verify tickets and prevent duplicate entry |
+| 14 | Registration management and UI polish | Organizers can review registrations; layout and error states are refined |
+| 15 | Testing, bug fixes, and final documentation | Main attendee and organizer flows are ready to demonstrate |
 
 ## 8. Testing strategy
 
 - **API tests (Jest and Supertest):** signup and login, 401 without a token, role restrictions, event CRUD, and booking.
 - **Oversell test:** fire parallel booking requests for the last seats and confirm that stock never goes below zero.
-- **Payment test:** an invalid signature must not confirm a booking.
+- **QR check-in:** a valid ticket can be checked in once; repeat scans are rejected.
 - **Validation and edge cases:** empty fields, negative quantity, duplicate email, past event dates, and booking an event that has sold out.
 - **Manual checks:** the full flow on desktop and phone before deployment.
 
@@ -179,8 +169,8 @@ event-ticketing/
 - **Frontend:** Vercel
 - **Backend:** Render
 - **Database:** Neon (hosted PostgreSQL)
-- All secrets (DB URL, JWT secret, Razorpay keys) live in environment variables, and `.env` is gitignored.
-- Final check: open the live link on a different device and complete a test purchase.
+- All secrets (database URL and JWT secret) live in environment variables, and `.env` is gitignored.
+- Final check: open the live link on a different device and complete a test reservation and check-in.
 
 ---
 
@@ -202,7 +192,7 @@ _Updated as I build, in my own words:_
 
 ## 12. Goal
 
-Ship a deployed, working ticketing platform that handles real payment flows and prevents overselling. By the end I want to understand authentication, relational data modelling, safe concurrent updates, and third-party payment integration well enough to explain each one in an interview.
+Ship a deployed, working ticketing platform that handles event management, free reservations, and QR check-in. By the end I want to understand authentication, relational data modelling, safe concurrent updates, and API development well enough to explain each one in an interview.
 
 ---
 
