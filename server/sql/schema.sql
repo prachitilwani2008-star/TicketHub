@@ -1,4 +1,4 @@
--- TicketHub initial PostgreSQL schema.
+-- TIxora initial PostgreSQL schema.
 -- Apply this file with: npm run db:init
 
 CREATE TABLE IF NOT EXISTS users (

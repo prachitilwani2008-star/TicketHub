@@ -1,6 +1,6 @@
-# TicketHub — Day 1 Feature Plan
+# TIxora — Day 1 Feature Plan
 
-This document defines the first version of TicketHub and keeps the 15-day build focused. The MVP is a working event discovery and free-ticket reservation app. Payments, QR check-in, and email are stretch features because they add extra services and security work.
+This document defines the first version of TIxora and keeps the 15-day build focused. The MVP is a working event discovery and free-ticket reservation app. Payments, QR check-in, and email are stretch features because they add extra services and security work.
 
 ## Problem
 

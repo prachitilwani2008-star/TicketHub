@@ -1,14 +1,16 @@
-# TicketHub: Event Ticketing Platform
+# TIxora: Event Ticketing Platform
 
 > Discover events, reserve free tickets, and check attendees in with unique QR tickets. Built in 15 days as Track A of **ALTA Builder 30**.
 
 | | |
 |---|---|
 | **Type** | Full-stack web application |
-| **Status** | Day 3 of 15: schema and connection code added; database URL still needs configuration |
+| **Status** | In progress: event discovery UI and authentication are underway |
 | **Stack** | React, Node.js/Express, PostgreSQL (`pg`) |
 | **Live demo** | _coming on Day 14_ |
 | **Demo video** | _coming on Day 15_ |
+
+Event photography credits and license links are in [`client/public/IMAGE-CREDITS.md`](client/public/IMAGE-CREDITS.md).
 
 ---
 
@@ -16,7 +18,7 @@
 
 **The problem.** College fests and local events often share details across messages, forms, and social posts. Attendees can miss reliable event information, while organizers must maintain reservation lists manually and risk accepting more reservations than their event can hold.
 
-**The solution.** TicketHub puts event discovery and reservations in one place. An organizer publishes an event with a limited ticket quantity. An attendee reserves tickets and receives a booking reference and, later in the roadmap, a QR ticket. The booking flow checks availability so reservations respect event capacity.
+**The solution.** TIxora puts event discovery and reservations in one place. An organizer publishes an event with a limited ticket quantity. An attendee reserves tickets and receives a booking reference and, later in the roadmap, a QR ticket. The booking flow checks availability so reservations respect event capacity.
 
 **What makes it useful.**
 - Seats can't be oversold, because stock is reduced in a single atomic database operation.
@@ -70,6 +72,18 @@
 7. The attendee opens **My Tickets** and shows the QR code at the gate.
 8. The organizer reviews registrations and check-in status on the dashboard.
 
+### Authentication API (Day 4)
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Public | Create an attendee or organizer account and receive a JWT |
+| `POST` | `/api/auth/login` | Public | Verify credentials and receive a JWT |
+| `GET` | `/api/auth/me` | Signed-in user | Return the current account profile |
+| `GET` | `/api/auth/organizer-check` | Organizer | Demonstrate organizer-only access |
+| `GET` | `/api/auth/attendee-check` | Attendee | Demonstrate attendee-only access |
+
+Register with JSON fields `name`, `email`, `password`, and optional `role` (`attendee` by default or `organizer`). Login accepts `email` and `password`. Send the returned token on protected requests as `Authorization: Bearer <token>`. Public registration cannot create admin accounts. Set a random `JWT_SECRET` of at least 32 characters in `server/.env`; keep it private and do not commit `.env`.
+
 ---
 
 ## 5. Architecture
@@ -103,7 +117,7 @@ Express API (Node.js)
 ### Planned folder structure
 
 ```
-TicketHub/
+TIxora/
 ├── client/                 React and Vite frontend
 │   └── src/
 ├── server/
@@ -125,7 +139,7 @@ TicketHub/
 | Express | REST API framework |
 | PostgreSQL | Relational database, with transactions for safe booking |
 | node-postgres (`pg`) | PostgreSQL connection pool and SQL queries |
-| bcrypt, jsonwebtoken | Password hashing and authentication |
+| bcryptjs, jsonwebtoken | Password hashing and signed, expiring access tokens |
 | zod | Input validation |
 | React (Vite), React Router | Frontend UI and routing |
 | axios | API calls from the frontend |
@@ -181,6 +195,13 @@ _Updated as I build, in my own words:_
 - Day 1: Turning a vague idea into a problem statement, user roles, and an MVP I can finish in 15 days.
 
 ## 11. Progress log
+
+**Day 4: Authentication API (code complete; live database verification pending)**
+- Added attendee and organizer registration with input validation and bcrypt password hashes
+- Added login with generic credential errors and one-hour JWT access tokens
+- Added current-user, authenticated, and role-restricted API routes
+- Added a private JWT signing key to the local, gitignored `server/.env`
+- Supabase tables were created in the dashboard; backend connection still needs a valid database password in `DATABASE_URL`
 
 **Day 1: Planning (done)**
 - Project selected: Event Ticketing

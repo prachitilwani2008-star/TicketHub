@@ -9,8 +9,11 @@ const events = [
     date: 'NOV 22',
     time: '7:00 PM',
     color: 'coral',
-    art: '♫',
+    image: '/images/concert-crowd.jpg',
+    imageAlt: 'Crowd enjoying bright lights at a live music event',
     tag: 'Almost full',
+    description: 'An open-air night of live music, warm lights, and easy company above the city. Come for one set and stay for the whole evening.',
+    ticket: 'From ₹299',
   },
   {
     id: 2,
@@ -20,8 +23,11 @@ const events = [
     date: 'NOV 24',
     time: '11:00 AM',
     color: 'lilac',
-    art: '✳',
+    image: '/images/pottery-workshop.jpg',
+    imageAlt: 'Artist shaping clay on a pottery wheel',
     tag: 'Free entry',
+    description: 'Slow down with a thoughtful collection of local art, small creative workshops, and conversations with the artists behind the work.',
+    ticket: 'Free',
   },
   {
     id: 3,
@@ -31,8 +37,67 @@ const events = [
     date: 'NOV 29',
     time: '10:30 AM',
     color: 'mint',
-    art: '✿',
+    image: '/images/food-festival.jpg',
+    imageAlt: 'Visitors enjoying an outdoor food market',
     tag: 'New',
+    description: 'A long-table Sunday brunch with seasonal plates, good coffee, and new people to meet. Bring a friend or come make one.',
+    ticket: 'From ₹499',
+  },
+  {
+    id: 4,
+    category: 'COMEDY',
+    title: 'Laughing Room Live',
+    place: 'The Little Theatre, Bengaluru',
+    date: 'DEC 03',
+    time: '8:00 PM',
+    color: 'coral',
+    image: '/images/standup-comedy.jpg',
+    imageAlt: 'Stand-up performer on stage in front of a red curtain',
+    tag: 'New show',
+    description: 'A close-up comedy night with sharp local comics, a small room, and plenty of laughs. Arrive early, grab a seat, and settle in.',
+    ticket: 'From ₹249',
+  },
+  {
+    id: 5,
+    category: 'MUSIC',
+    title: 'City Lights Festival',
+    place: 'Freedom Park, Bengaluru',
+    date: 'DEC 06',
+    time: '5:30 PM',
+    color: 'lilac',
+    image: '/images/night-festival.jpg',
+    imageAlt: 'Colorful outdoor festival with a crowd and city lights',
+    tag: 'Just added',
+    description: 'An open-air evening of music, lights, and a lively crowd. Bring your friends for a relaxed start that turns into a night out.',
+    ticket: 'From ₹699',
+  },
+  {
+    id: 6,
+    category: 'ART & CULTURE',
+    title: 'Clay & Coffee Studio',
+    place: 'Mitti House, Bengaluru',
+    date: 'DEC 07',
+    time: '10:00 AM',
+    color: 'mint',
+    image: '/images/pottery-workshop.jpg',
+    imageAlt: 'Hands shaping a clay pot at a pottery studio',
+    tag: 'Small group',
+    description: 'Try the pottery wheel with a friendly studio guide, then enjoy coffee while your pieces dry. No previous experience needed.',
+    ticket: 'From ₹399',
+  },
+  {
+    id: 7,
+    category: 'FOOD & DRINK',
+    title: 'Namma Night Market',
+    place: 'Church Street, Bengaluru',
+    date: 'DEC 12',
+    time: '6:00 PM',
+    color: 'coral',
+    image: '/images/food-festival.jpg',
+    imageAlt: 'People browsing food stands at an outdoor market',
+    tag: 'Free entry',
+    description: 'Spend the evening wandering local food stalls, discovering small makers, and sharing a few plates with friends.',
+    ticket: 'Free',
   },
 ]
 
@@ -40,7 +105,35 @@ function getPage(pathname) {
   if (pathname === '/login') return 'login'
   if (pathname === '/signup') return 'signup'
   if (pathname === '/account') return 'account'
+  if (/^\/events\/\d+$/.test(pathname)) return 'event'
   return 'home'
+}
+
+function ProfileAvatar({ look = 'attendee', className = '' }) {
+  const palettes = {
+    attendee: ['#ead8f4', '#58406d', '#f1b995', '#7750a4'],
+    organizer: ['#d8ece8', '#315a57', '#c88668', '#416e69'],
+    one: ['#f5dfd2', '#4f3c39', '#d99472', '#bd6f55'],
+    two: ['#e4e2f7', '#39334e', '#c9846f', '#6962a1'],
+    three: ['#dce9dc', '#34453b', '#b87a58', '#728765'],
+    four: ['#f7e6c9', '#594738', '#e1a37e', '#d09b4f'],
+  }
+  const [background, hair, skin, shirt] = palettes[look] || palettes.attendee
+
+  return (
+    <svg className={className} viewBox="0 0 40 40" role="img" aria-label={look === 'organizer' ? 'Organizer profile' : 'Profile portrait'}>
+      <circle cx="20" cy="20" r="20" fill={background} />
+      <path d="M6 40c1-8 6-12 14-12s13 4 14 12" fill={shirt} />
+      <path d="M11 17c0-8 4-12 10-12 7 0 10 5 9 13l-2 7H13z" fill={hair} />
+      <ellipse cx="20" cy="19" rx="7.2" ry="9" fill={skin} />
+      <path d="M12.8 17c.6-7 3.5-10 8.5-10 4.2 0 7 2.6 7.4 7.2-2.3-.4-4.3-1.8-5.7-4-1.9 3.2-5.7 5.3-10.2 6.8" fill={hair} />
+      <path d="M17 21.2c1.8 1.4 4.2 1.4 6 0" fill="none" stroke="#8c514b" strokeWidth=".9" strokeLinecap="round" />
+      <circle cx="17.2" cy="18.7" r=".65" fill="#382d36" />
+      <circle cx="22.8" cy="18.7" r=".65" fill="#382d36" />
+      <circle cx="32.5" cy="8" r="3" fill="#fff" opacity=".85" />
+      <path d="M32.5 6.4v3.2M30.9 8h3.2" stroke="#9e77c4" strokeWidth=".8" strokeLinecap="round" />
+    </svg>
+  )
 }
 
 function App() {
@@ -120,6 +213,13 @@ function App() {
       />
 
       {page === 'home' && <HomePage onNavigate={navigate} />}
+      {page === 'event' && (
+        <EventDetailsPage
+          event={events.find((item) => `/events/${item.id}` === window.location.pathname)}
+          currentUser={currentUser}
+          onNavigate={navigate}
+        />
+      )}
       {(page === 'login' || page === 'signup') && (
         <AuthPage
           mode={page}
@@ -139,8 +239,8 @@ function App() {
 function Header({ currentUser, onNavigate, onSignOut }) {
   return (
     <header className="site-header">
-      <button className="brand" type="button" onClick={() => onNavigate('/')} aria-label="TicketHub home">
-        ticket<span>hub</span><i>.</i>
+      <button className="brand" type="button" onClick={() => onNavigate('/')} aria-label="TIxora home">
+        <img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">TIxora</span>
       </button>
       <nav className="main-nav" aria-label="Main navigation">
         <a href="/#events" onClick={(event) => { event.preventDefault(); onNavigate('/#events') }}>Discover</a>
@@ -150,7 +250,7 @@ function Header({ currentUser, onNavigate, onSignOut }) {
         {currentUser ? (
           <>
             <button className="profile-button" type="button" onClick={() => onNavigate('/account')}>
-              <span className="avatar">{currentUser.name?.[0]?.toUpperCase() ?? 'T'}</span>
+              <ProfileAvatar look={currentUser.role === 'organizer' ? 'organizer' : 'attendee'} className="profile-avatar" />
               <span className="profile-name">{currentUser.name}</span>
             </button>
             <button className="text-button signout-button" type="button" onClick={onSignOut}>Sign out</button>
@@ -169,6 +269,22 @@ function Header({ currentUser, onNavigate, onSignOut }) {
 }
 
 function HomePage({ onNavigate }) {
+  const [searchText, setSearchText] = useState('')
+  const [activeCategory, setActiveCategory] = useState('ALL')
+  const categories = [
+    { value: 'ALL', label: 'All events' },
+    { value: 'MUSIC', label: 'Music' },
+    { value: 'COMEDY', label: 'Comedy' },
+    { value: 'ART & CULTURE', label: 'Art & culture' },
+    { value: 'FOOD & DRINK', label: 'Food & drink' },
+  ]
+  const normalizedSearch = searchText.trim().toLowerCase()
+  const visibleEvents = events.filter((event) => {
+    const matchesCategory = activeCategory === 'ALL' || event.category === activeCategory
+    const searchableText = `${event.title} ${event.place} ${event.category}`.toLowerCase()
+    return matchesCategory && searchableText.includes(normalizedSearch)
+  })
+
   return (
     <main>
       <section className="hero-section">
@@ -183,19 +299,21 @@ function HomePage({ onNavigate }) {
             <button className="button button-quiet" type="button" onClick={() => onNavigate('/signup?role=organizer')}>Host an event</button>
           </div>
           <div className="social-proof">
-            <div className="avatar-stack" aria-hidden="true"><span>R</span><span>A</span><span>M</span><span>+</span></div>
+            <div className="avatar-stack" aria-label="A welcoming local community">
+              <ProfileAvatar look="one" className="community-avatar" />
+              <ProfileAvatar look="two" className="community-avatar" />
+              <ProfileAvatar look="three" className="community-avatar" />
+              <ProfileAvatar look="four" className="community-avatar" />
+            </div>
             <p><strong>Good things happen together.</strong><br />Join your local community.</p>
           </div>
         </div>
-        <div className="hero-art" aria-label="Illustration of friends gathering at an event">
-          <div className="art-sun" />
+        <div className="hero-art">
+          <img className="hero-photo" src="/images/concert-crowd.jpg" alt="A crowd enjoying a colorful live music performance" fetchPriority="high" />
+          <div className="hero-photo-overlay" aria-hidden="true" />
           <div className="art-note note-one">✳</div>
           <div className="art-note note-two">♫</div>
           <div className="art-label"><span>THIS WEEKEND</span><strong>Find your<br />kind of fun.</strong><a href="#events">See what's on <span>↗</span></a></div>
-          <div className="art-person person-one"><i /><b /><span /></div>
-          <div className="art-person person-two"><i /><b /><span /></div>
-          <div className="art-person person-three"><i /><b /><span /></div>
-          <div className="art-ground" />
           <div className="art-caption"><span className="caption-dot" /> GOOD PLANS, GREAT PEOPLE</div>
         </div>
       </section>
@@ -206,11 +324,44 @@ function HomePage({ onNavigate }) {
             <p className="eyebrow"><span className="eyebrow-line" /> AROUND YOU</p>
             <h2>Plans worth making.</h2>
           </div>
-          <button className="browse-link" type="button" onClick={() => onNavigate('/signup')}>See all events <span>↗</span></button>
+          <a className="browse-link" href="#events">See all events <span>↗</span></a>
         </div>
-        <div className="event-grid">
-          {events.map((event) => <EventCard event={event} key={event.id} onSelect={() => onNavigate('/signup')} />)}
+        <div className="event-controls">
+          <label className="event-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              aria-label="Search events"
+              type="search"
+              placeholder="Search events or places"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+          </label>
+          <div className="category-filters" role="group" aria-label="Filter events by category">
+            {categories.map((category) => (
+              <button
+                className={`category-filter ${activeCategory === category.value ? 'active' : ''}`}
+                type="button"
+                aria-pressed={activeCategory === category.value}
+                key={category.value}
+                onClick={() => setActiveCategory(category.value)}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
         </div>
+        {visibleEvents.length > 0 ? (
+          <div className="event-grid">
+            {visibleEvents.map((event) => <EventCard event={event} key={event.id} onSelect={() => onNavigate(`/events/${event.id}`)} />)}
+          </div>
+        ) : (
+          <div className="empty-events">
+            <span aria-hidden="true">⌕</span>
+            <div><strong>No events found</strong><p>Try another search or choose a different category.</p></div>
+            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL') }}>Clear filters</button>
+          </div>
+        )}
       </section>
 
       <section className="how-section" id="how-it-works">
@@ -237,9 +388,9 @@ function HomePage({ onNavigate }) {
 function EventCard({ event, onSelect }) {
   return (
     <button className="event-card" type="button" onClick={onSelect}>
-      <span className={`event-art event-art-${event.color}`} aria-hidden="true">
-        <span className="event-art-shape shape-one" /><span className="event-art-shape shape-two" />
-        <span className="event-art-symbol">{event.art}</span>
+      <span className={`event-art event-art-${event.color}`}>
+        <img className="event-photo" src={event.image} alt={event.imageAlt} loading="lazy" />
+        <span className="event-image-shade" aria-hidden="true" />
         <span className="event-date">{event.date}</span>
         <span className="event-tag">{event.tag}</span>
       </span>
@@ -250,6 +401,47 @@ function EventCard({ event, onSelect }) {
         <span className="event-time">{event.time} <i>·</i> Bengaluru</span>
       </span>
     </button>
+  )
+}
+
+function EventDetailsPage({ event, currentUser, onNavigate }) {
+  if (!event) {
+    return (
+      <main className="event-not-found">
+        <p className="eyebrow"><span className="eyebrow-line" /> EVENT NOT FOUND</p>
+        <h1>That event isn’t here.</h1>
+        <button className="button button-primary" type="button" onClick={() => onNavigate('/')}>Back to discover <span>↗</span></button>
+      </main>
+    )
+  }
+
+  return (
+    <main className="event-detail-page">
+      <button className="back-link event-back" type="button" onClick={() => onNavigate('/#events')}><span>←</span> All events</button>
+      <section className="event-detail-layout">
+        <div className={`event-detail-art event-art-${event.color}`}>
+          <img src={event.image} alt={event.imageAlt} />
+          <span className="event-detail-shade" aria-hidden="true" />
+          <span className="event-date">{event.date}</span>
+        </div>
+        <div className="event-detail-copy">
+          <p className="eyebrow"><span className="eyebrow-line" /> {event.category}</p>
+          <h1>{event.title}</h1>
+          <p className="event-detail-description">{event.description}</p>
+          <div className="event-facts">
+            <div><span className="fact-icon">◷</span><p><strong>{event.date} · {event.time}</strong><small>Doors open 30 minutes before</small></p></div>
+            <div><span className="fact-icon">⌖</span><p><strong>{event.place}</strong><small>Bengaluru, Karnataka</small></p></div>
+          </div>
+          <div className="event-booking-card">
+            <div><span className="event-category">TICKETS</span><strong>{event.ticket}</strong></div>
+            {currentUser
+              ? <button className="button button-primary" type="button" disabled>Booking opens soon</button>
+              : <button className="button button-primary" type="button" onClick={() => onNavigate('/login')}>Log in to reserve <span>↗</span></button>}
+          </div>
+          {currentUser && <p className="booking-note">You’re signed in. Online reservations are coming soon.</p>}
+        </div>
+      </section>
+    </main>
   )
 }
 
@@ -290,7 +482,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
       onSuccess({ token: result.token, user: result.user })
     } catch (requestError) {
       setError(requestError instanceof TypeError
-        ? 'We can’t reach TicketHub right now. Please try again in a moment.'
+        ? 'We can’t reach TIxora right now. Please try again in a moment.'
         : requestError.message)
     } finally {
       setIsSubmitting(false)
@@ -303,7 +495,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
         <div className="auth-form-panel">
           <button className="back-link" type="button" onClick={() => onNavigate('/')}><span>←</span> Back to discover</button>
           <div className="auth-heading">
-            <div className="auth-mark">t<span>.</span></div>
+            <img className="auth-mark-logo" src="/tixora-mark.png" alt="TIxora" />
             <p className="eyebrow">A GOOD PLAN STARTS HERE</p>
             <h1>{isSignup ? 'Come on in.' : 'Good to see you.'}</h1>
             <p>{isSignup ? 'Create your account and find something worth showing up for.' : 'Sign in to pick up where the good times left off.'}</p>
@@ -335,7 +527,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
 
             <div className="password-label-row">
               <label className="field-label" htmlFor="password">Password</label>
-              {!isSignup && <button className="forgot-link" type="button" onClick={() => setError('Password reset will be available soon. For now, contact your TicketHub organizer.')}>Forgot password?</button>}
+              {!isSignup && <button className="forgot-link" type="button" onClick={() => setError('Password reset will be available soon. For now, contact your TIxora organizer.')}>Forgot password?</button>}
             </div>
             <div className="password-wrap">
               <input className="text-input" id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={isSignup ? 'new-password' : 'current-password'} minLength="8" maxLength="72" placeholder={isSignup ? 'At least 8 characters' : 'Enter your password'} required />
@@ -351,7 +543,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
           </form>
 
           <p className="auth-switch">
-            {isSignup ? 'Already have an account?' : 'New to Tickethub?'}{' '}
+            {isSignup ? 'Already have an account?' : 'New to TIxora?'}{' '}
             <button type="button" onClick={() => onNavigate(isSignup ? '/login' : '/signup')}>
               {isSignup ? 'Log in' : 'Create account'}
             </button>
@@ -362,7 +554,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
           <div className="auth-orbit orbit-one" /><div className="auth-orbit orbit-two" />
           <span className="auth-sparkle sparkle-one">✳</span><span className="auth-sparkle sparkle-two">✦</span>
           <div className="auth-art-copy"><p className="eyebrow">YOUR NEXT STORY STARTS HERE</p><h2>Say yes to<br />going out.</h2><p>From tiny pop-ups to big nights. Find the people and plans that make your city feel like yours.</p></div>
-          <div className="auth-ticket"><div className="ticket-stamp">TH<span>✳</span></div><div><small>YOUR NEXT PLAN</small><strong>Make it a good one.</strong></div><span className="ticket-arrow">↗</span></div>
+          <div className="auth-ticket"><div className="ticket-stamp">TX<span>✳</span></div><div><small>YOUR NEXT PLAN</small><strong>Make it a good one.</strong></div><span className="ticket-arrow">↗</span></div>
           <div className="auth-art-footer"><span>01 — 03</span><div><i /><i /><i /></div><span>DISCOVER · BOOK · GO</span></div>
         </aside>
       </section>
@@ -375,7 +567,7 @@ function AccountPage({ user, onNavigate }) {
   return (
     <main className="account-page">
       <div className="account-welcome">
-        <p className="eyebrow"><span className="eyebrow-line" /> YOUR TICKETHUB</p>
+        <p className="eyebrow"><span className="eyebrow-line" /> YOUR TIXORA</p>
         <h1>Welcome in, {user.name.split(' ')[0]}.</h1>
         <p>Your {isOrganizer ? 'organizer' : 'attendee'} space is ready. Let’s make a good plan.</p>
         <div className="account-actions">
@@ -391,9 +583,9 @@ function AccountPage({ user, onNavigate }) {
 function Footer({ onNavigate }) {
   return (
     <footer className="site-footer">
-      <button className="brand footer-brand" type="button" onClick={() => onNavigate('/')}>ticket<span>hub</span><i>.</i></button>
-      <p>Make plans. Make memories.</p>
-      <span>© 2026 TicketHub</span>
+      <button className="brand footer-brand" type="button" onClick={() => onNavigate('/')} aria-label="TIxora home"><img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">TIxora</span></button>
+      <p>Your next adventure, booked.</p>
+      <span>© 2026 TIxora</span>
     </footer>
   )
 }
