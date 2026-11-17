@@ -1,6 +1,7 @@
 import express from 'express'
 import { pool } from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
+import organizerEventRoutes from './routes/organizerEventRoutes.js'
 import { getJwtSecret } from './utils/jwt.js'
 
 const app = express()
@@ -8,6 +9,7 @@ const port = process.env.PORT || 5055
 
 app.use(express.json())
 app.use('/api/auth', authRoutes)
+app.use('/api/organizer/events', organizerEventRoutes)
 
 app.get('/api/health', async (_request, response) => {
   try {
@@ -40,11 +42,11 @@ async function startServer() {
     getJwtSecret()
     await pool.query('SELECT 1')
     app.listen(port, () => {
-      console.log(`TIxora API is running at http://localhost:${port}`)
+      console.log(`Tixora API is running at http://localhost:${port}`)
       console.log('PostgreSQL connection is ready.')
     })
   } catch (error) {
-    console.error('Could not start TIxora API:', error.message)
+    console.error('Could not start Tixora API:', error.message)
     console.error('Check JWT_SECRET and DATABASE_URL in server/.env and try again.')
     await pool.end()
     process.exitCode = 1

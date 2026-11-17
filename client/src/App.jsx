@@ -239,8 +239,8 @@ function App() {
 function Header({ currentUser, onNavigate, onSignOut }) {
   return (
     <header className="site-header">
-      <button className="brand" type="button" onClick={() => onNavigate('/')} aria-label="TIxora home">
-        <img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">TIxora</span>
+      <button className="brand" type="button" onClick={() => onNavigate('/')} aria-label="Tixora home">
+        <img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">Tixora</span>
       </button>
       <nav className="main-nav" aria-label="Main navigation">
         <a href="/#events" onClick={(event) => { event.preventDefault(); onNavigate('/#events') }}>Discover</a>
@@ -482,7 +482,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
       onSuccess({ token: result.token, user: result.user })
     } catch (requestError) {
       setError(requestError instanceof TypeError
-        ? 'We can’t reach TIxora right now. Please try again in a moment.'
+        ? 'We can’t reach Tixora right now. Please try again in a moment.'
         : requestError.message)
     } finally {
       setIsSubmitting(false)
@@ -495,7 +495,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
         <div className="auth-form-panel">
           <button className="back-link" type="button" onClick={() => onNavigate('/')}><span>←</span> Back to discover</button>
           <div className="auth-heading">
-            <img className="auth-mark-logo" src="/tixora-mark.png" alt="TIxora" />
+            <img className="auth-mark-logo" src="/tixora-mark.png" alt="Tixora" />
             <p className="eyebrow">A GOOD PLAN STARTS HERE</p>
             <h1>{isSignup ? 'Come on in.' : 'Good to see you.'}</h1>
             <p>{isSignup ? 'Create your account and find something worth showing up for.' : 'Sign in to pick up where the good times left off.'}</p>
@@ -527,7 +527,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
 
             <div className="password-label-row">
               <label className="field-label" htmlFor="password">Password</label>
-              {!isSignup && <button className="forgot-link" type="button" onClick={() => setError('Password reset will be available soon. For now, contact your TIxora organizer.')}>Forgot password?</button>}
+              {!isSignup && <button className="forgot-link" type="button" onClick={() => setError('Password reset will be available soon. For now, contact your Tixora organizer.')}>Forgot password?</button>}
             </div>
             <div className="password-wrap">
               <input className="text-input" id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={isSignup ? 'new-password' : 'current-password'} minLength="8" maxLength="72" placeholder={isSignup ? 'At least 8 characters' : 'Enter your password'} required />
@@ -543,7 +543,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
           </form>
 
           <p className="auth-switch">
-            {isSignup ? 'Already have an account?' : 'New to TIxora?'}{' '}
+            {isSignup ? 'Already have an account?' : 'New to Tixora?'}{' '}
             <button type="button" onClick={() => onNavigate(isSignup ? '/login' : '/signup')}>
               {isSignup ? 'Log in' : 'Create account'}
             </button>
@@ -583,9 +583,9 @@ function AccountPage({ user, onNavigate }) {
 function Footer({ onNavigate }) {
   return (
     <footer className="site-footer">
-      <button className="brand footer-brand" type="button" onClick={() => onNavigate('/')} aria-label="TIxora home"><img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">TIxora</span></button>
+      <button className="brand footer-brand" type="button" onClick={() => onNavigate('/')} aria-label="Tixora home"><img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">Tixora</span></button>
       <p>Your next adventure, booked.</p>
-      <span>© 2026 TIxora</span>
+      <span>© 2026 Tixora</span>
     </footer>
   )
 }

@@ -1,4 +1,4 @@
-# TIxora: Event Ticketing Platform
+# Tixora: Event Ticketing Platform
 
 > Discover events, reserve free tickets, and check attendees in with unique QR tickets. Built in 15 days as Track A of **ALTA Builder 30**.
 
@@ -18,7 +18,7 @@ Event photography credits and license links are in [`client/public/IMAGE-CREDITS
 
 **The problem.** College fests and local events often share details across messages, forms, and social posts. Attendees can miss reliable event information, while organizers must maintain reservation lists manually and risk accepting more reservations than their event can hold.
 
-**The solution.** TIxora puts event discovery and reservations in one place. An organizer publishes an event with a limited ticket quantity. An attendee reserves tickets and receives a booking reference and, later in the roadmap, a QR ticket. The booking flow checks availability so reservations respect event capacity.
+**The solution.** Tixora puts event discovery and reservations in one place. An organizer publishes an event with a limited ticket quantity. An attendee reserves tickets and receives a booking reference and, later in the roadmap, a QR ticket. The booking flow checks availability so reservations respect event capacity.
 
 **What makes it useful.**
 - Seats can't be oversold, because stock is reduced in a single atomic database operation.
@@ -84,6 +84,20 @@ Event photography credits and license links are in [`client/public/IMAGE-CREDITS
 
 Register with JSON fields `name`, `email`, `password`, and optional `role` (`attendee` by default or `organizer`). Login accepts `email` and `password`. Send the returned token on protected requests as `Authorization: Bearer <token>`. Public registration cannot create admin accounts. Set a random `JWT_SECRET` of at least 32 characters in `server/.env`; keep it private and do not commit `.env`.
 
+### Organizer event API (Day 6)
+
+All event-management routes require an organizer JWT in the `Authorization: Bearer <token>` header. Organizers can only read or change events they own.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/organizer/events` | Create an event and its general-admission ticket capacity |
+| `GET` | `/api/organizer/events` | List the signed-in organizer’s events |
+| `GET` | `/api/organizer/events/:eventId` | View one event owned by the organizer |
+| `PUT` / `PATCH` | `/api/organizer/events/:eventId` | Update event details, capacity, price, or image URL |
+| `DELETE` | `/api/organizer/events/:eventId` | Cancel the event without removing booking history |
+
+Create an event with JSON fields `title`, `description`, `venue`, `city`, `startsAt`, and `ticketCapacity`. Optional fields are `ticketPrice` (defaults to free), `imageUrl`, and `status` (`draft` by default; organisers can publish or return it to draft). Updates accept any subset of those fields. Event creation and ticket-capacity setup are saved together in a database transaction.
+
 ---
 
 ## 5. Architecture
@@ -117,7 +131,7 @@ Express API (Node.js)
 ### Planned folder structure
 
 ```
-TIxora/
+Tixora/
 ├── client/                 React and Vite frontend
 │   └── src/
 ├── server/
@@ -196,13 +210,6 @@ _Updated as I build, in my own words:_
 
 ## 11. Progress log
 
-**Day 4: Authentication API (code complete; live database verification pending)**
-- Added attendee and organizer registration with input validation and bcrypt password hashes
-- Added login with generic credential errors and one-hour JWT access tokens
-- Added current-user, authenticated, and role-restricted API routes
-- Added a private JWT signing key to the local, gitignored `server/.env`
-- Supabase tables were created in the dashboard; backend connection still needs a valid database password in `DATABASE_URL`
-
 **Day 1: Planning (done)**
 - Project selected: Event Ticketing
 - Problem statement and proposed solution written
@@ -210,6 +217,24 @@ _Updated as I build, in my own words:_
 - MVP features and future improvements listed
 - Tech stack chosen
 - Initial architecture and database design drafted
+
+**Day 4: Authentication API (implemented)**
+- Added attendee and organizer registration with input validation and bcrypt password hashes
+- Added login with generic credential errors and one-hour JWT access tokens
+- Added current-user, authenticated, and role-restricted API routes
+- Kept the JWT signing key in the local, gitignored `server/.env`
+
+**Day 5: Authentication interface (implemented)**
+- Built the React sign-up and login screens
+- Connected the forms to the authentication API
+- Added account-page protection and session restoration
+
+**Day 6: Organizer event API (implemented)**
+- Added organizer-only create, list, view, update, and cancel endpoints
+- Added ownership checks so organizers cannot access another organizer’s events
+- Creates the event and its ticket capacity atomically
+- Validates event details, date, capacity, price, and optional image URL
+- Prevents capacity from being reduced below tickets already sold
 
 ## 12. Goal
 
