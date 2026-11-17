@@ -99,6 +99,34 @@ const events = [
     description: 'Spend the evening wandering local food stalls, discovering small makers, and sharing a few plates with friends.',
     ticket: 'Free',
   },
+  {
+    id: 8,
+    category: 'NIGHTLIFE',
+    title: 'After Hours at The Courtyard',
+    place: 'The Courtyard, Bengaluru',
+    date: 'DEC 13',
+    time: '8:30 PM',
+    color: 'lilac',
+    image: '/images/night-festival.jpg',
+    imageAlt: 'Crowd at a lively outdoor night event with colorful lights',
+    tag: 'New',
+    description: 'An easy-going night out with a live DJ, outdoor lights, and room to dance or catch up with friends.',
+    ticket: 'From ₹399',
+  },
+  {
+    id: 9,
+    category: 'WORKSHOPS',
+    title: 'First Wheel: Pottery Workshop',
+    place: 'Mitti House, Bengaluru',
+    date: 'DEC 14',
+    time: '2:00 PM',
+    color: 'mint',
+    image: '/images/pottery-workshop.jpg',
+    imageAlt: 'Hands learning to shape clay on a pottery wheel',
+    tag: 'Beginner friendly',
+    description: 'Learn the basics of shaping clay with a studio guide. Make your first small piece and enjoy a relaxed creative afternoon.',
+    ticket: 'From ₹499',
+  },
 ]
 
 function getPage(pathname) {
@@ -271,18 +299,23 @@ function Header({ currentUser, onNavigate, onSignOut }) {
 function HomePage({ onNavigate }) {
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('ALL')
+  const [priceFilter, setPriceFilter] = useState('ALL')
   const categories = [
     { value: 'ALL', label: 'All events' },
     { value: 'MUSIC', label: 'Music' },
     { value: 'COMEDY', label: 'Comedy' },
     { value: 'ART & CULTURE', label: 'Art & culture' },
     { value: 'FOOD & DRINK', label: 'Food & drink' },
+    { value: 'NIGHTLIFE', label: 'Nightlife' },
+    { value: 'WORKSHOPS', label: 'Workshops' },
   ]
   const normalizedSearch = searchText.trim().toLowerCase()
   const visibleEvents = events.filter((event) => {
     const matchesCategory = activeCategory === 'ALL' || event.category === activeCategory
-    const searchableText = `${event.title} ${event.place} ${event.category}`.toLowerCase()
-    return matchesCategory && searchableText.includes(normalizedSearch)
+    const searchableText = `${event.title} ${event.place} ${event.category} ${event.description}`.toLowerCase()
+    const isFree = event.ticket.toLowerCase() === 'free'
+    const matchesPrice = priceFilter === 'ALL' || (priceFilter === 'FREE' ? isFree : !isFree)
+    return matchesCategory && matchesPrice && searchableText.includes(normalizedSearch)
   })
 
   return (
@@ -332,12 +365,21 @@ function HomePage({ onNavigate }) {
             <input
               aria-label="Search events"
               type="search"
-              placeholder="Search events or places"
+              placeholder="Try comedy, music, pottery…"
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
             />
           </label>
+          <label className="price-filter-label">
+            <span>Price</span>
+            <select aria-label="Filter events by ticket price" value={priceFilter} onChange={(event) => setPriceFilter(event.target.value)}>
+              <option value="ALL">Any price</option>
+              <option value="FREE">Free events</option>
+              <option value="PAID">Paid events</option>
+            </select>
+          </label>
           <div className="category-filters" role="group" aria-label="Filter events by category">
+            <span className="filter-label">Genre</span>
             {categories.map((category) => (
               <button
                 className={`category-filter ${activeCategory === category.value ? 'active' : ''}`}
@@ -346,10 +388,16 @@ function HomePage({ onNavigate }) {
                 key={category.value}
                 onClick={() => setActiveCategory(category.value)}
               >
-                {category.label}
+                {category.label}<span className="filter-count">{category.value === 'ALL' ? events.length : events.filter((item) => item.category === category.value).length}</span>
               </button>
             ))}
           </div>
+        </div>
+        <div className="results-summary" aria-live="polite">
+          <span><strong>{visibleEvents.length}</strong> {visibleEvents.length === 1 ? 'event' : 'events'} to explore</span>
+          {(activeCategory !== 'ALL' || priceFilter !== 'ALL' || searchText) && (
+            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL') }}>Clear filters</button>
+          )}
         </div>
         {visibleEvents.length > 0 ? (
           <div className="event-grid">
@@ -359,7 +407,7 @@ function HomePage({ onNavigate }) {
           <div className="empty-events">
             <span aria-hidden="true">⌕</span>
             <div><strong>No events found</strong><p>Try another search or choose a different category.</p></div>
-            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL') }}>Clear filters</button>
+            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL') }}>Reset search</button>
           </div>
         )}
       </section>
@@ -447,10 +495,29 @@ function EventDetailsPage({ event, currentUser, onNavigate }) {
 
 function AuthPage({ mode, onNavigate, onSuccess }) {
   const isSignup = mode === 'signup'
+  const featuredEvents = [events[0], events[3], events[4], events[8]]
+  const [featuredEventIndex, setFeaturedEventIndex] = useState(0)
+  const featuredEvent = featuredEvents[featuredEventIndex]
   const [role, setRole] = useState(() => new URLSearchParams(window.location.search).get('role') === 'organizer' ? 'organizer' : 'attendee')
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [legalDocument, setLegalDocument] = useState(null)
+
+  useEffect(() => {
+    if (!legalDocument) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setLegalDocument(null)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [legalDocument])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -534,12 +601,23 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
               <button className="show-password" type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'Hide' : 'Show'}</button>
             </div>
 
+            {isSignup ? (
+              <div className="consent-row">
+                <input id="policy-consent" name="policyConsent" type="checkbox" value="accepted" required />
+                <div>
+                  <label htmlFor="policy-consent">I agree to Tixora’s</label>{' '}
+                  <button type="button" onClick={() => setLegalDocument('terms')}>Terms</button>
+                  {' and '}
+                  <button type="button" onClick={() => setLegalDocument('privacy')}>Privacy Notice</button>.
+                </div>
+              </div>
+            ) : null}
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary auth-submit" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'One moment…' : isSignup ? 'Create your account' : 'Log in'}
               {!isSubmitting && <span aria-hidden="true">↗</span>}
             </button>
-            <p className="terms-note">By continuing, you agree to our <a href="#terms">Terms</a> and <a href="#privacy">Privacy Policy</a>.</p>
+            {!isSignup && <p className="terms-note">Read the <button type="button" onClick={() => setLegalDocument('terms')}>Terms</button> and <button type="button" onClick={() => setLegalDocument('privacy')}>Privacy Notice</button>.</p>}
           </form>
 
           <p className="auth-switch">
@@ -551,14 +629,90 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
         </div>
 
         <aside className="auth-art-panel">
-          <div className="auth-orbit orbit-one" /><div className="auth-orbit orbit-two" />
-          <span className="auth-sparkle sparkle-one">✳</span><span className="auth-sparkle sparkle-two">✦</span>
-          <div className="auth-art-copy"><p className="eyebrow">YOUR NEXT STORY STARTS HERE</p><h2>Say yes to<br />going out.</h2><p>From tiny pop-ups to big nights. Find the people and plans that make your city feel like yours.</p></div>
-          <div className="auth-ticket"><div className="ticket-stamp">TX<span>✳</span></div><div><small>YOUR NEXT PLAN</small><strong>Make it a good one.</strong></div><span className="ticket-arrow">↗</span></div>
-          <div className="auth-art-footer"><span>01 — 03</span><div><i /><i /><i /></div><span>DISCOVER · BOOK · GO</span></div>
+          <div className="auth-preview-heading">
+            <p className="eyebrow">A LITTLE LOOK AROUND</p>
+            <h2>Good plans<br />live nearby.</h2>
+            <p>Find a new favourite event, save your spot, and make a night of it.</p>
+          </div>
+          <div className="auth-preview-card" aria-live="polite">
+            <div className="auth-preview-image-wrap">
+              <img className="auth-preview-image" src={featuredEvent.image} alt={featuredEvent.imageAlt} />
+              <span className="auth-preview-date">{featuredEvent.date}</span>
+            </div>
+            <div className="auth-preview-details">
+              <span className="event-category">{featuredEvent.category}</span>
+              <strong>{featuredEvent.title}</strong>
+              <span>{featuredEvent.place}</span>
+              <div className="auth-preview-bottom"><small>{featuredEvent.ticket}</small><button type="button" onClick={() => setFeaturedEventIndex((featuredEventIndex + 1) % featuredEvents.length)}>Next event <span aria-hidden="true">→</span></button></div>
+            </div>
+          </div>
+          <div className="auth-preview-footer">
+            <div className="auth-preview-dots" aria-label="Choose a featured event">
+              {featuredEvents.map((event, index) => (
+                <button
+                  key={event.id}
+                  className={featuredEventIndex === index ? 'active' : ''}
+                  type="button"
+                  aria-label={`Show featured event ${index + 1}: ${event.title}`}
+                  aria-pressed={featuredEventIndex === index}
+                  onClick={() => setFeaturedEventIndex(index)}
+                />
+              ))}
+            </div>
+            <button className="auth-browse-link" type="button" onClick={() => onNavigate('/')}>Explore all events <span aria-hidden="true">↗</span></button>
+          </div>
         </aside>
       </section>
+      {legalDocument && <LegalDialog documentType={legalDocument} onClose={() => setLegalDocument(null)} />}
     </main>
+  )
+}
+
+function LegalDialog({ documentType, onClose }) {
+  const isTerms = documentType === 'terms'
+
+  return (
+    <div className="legal-backdrop" onClick={onClose}>
+      <section
+        className="legal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="legal-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="legal-dialog-heading">
+          <div>
+            <p className="eyebrow">TIXORA · {isTerms ? 'TERMS' : 'PRIVACY'}</p>
+            <h2 id="legal-dialog-title">{isTerms ? 'Terms of use' : 'Privacy notice'}</h2>
+          </div>
+          <button className="legal-close" type="button" aria-label="Close" onClick={onClose} autoFocus>×</button>
+        </div>
+        <div className="legal-dialog-content">
+          {isTerms ? (
+            <>
+              <p>Tixora is a student project prototype for discovering events and managing ticketing workflows.</p>
+              <h3>Event information</h3>
+              <p>Some listings and event details may be sample content. Online reservations and payments are not currently available, so viewing an event does not confirm a ticket or booking.</p>
+              <h3>Your account</h3>
+              <p>Provide accurate account details, keep your password private, and use the site lawfully. Do not attempt to access another person’s account or interfere with the service.</p>
+              <h3>Prototype availability</h3>
+              <p>Features may change while the project is being developed. Do not rely on sample listing details as confirmation of a real event.</p>
+            </>
+          ) : (
+            <>
+              <p>This notice explains what information the current Tixora prototype uses.</p>
+              <h3>Information used</h3>
+              <p>When you register, Tixora stores your name, email address, account role, and a hashed password. The app does not store your password in readable form.</p>
+              <h3>How it is used</h3>
+              <p>Account details are used to sign you in and provide attendee or organiser features. Your sign-in token is kept in this browser session so you can stay signed in while using the app.</p>
+              <h3>Storage and payments</h3>
+              <p>Account data is stored in the project’s PostgreSQL database hosted through Supabase. The current prototype does not collect payment details.</p>
+            </>
+          )}
+        </div>
+        <p className="legal-dialog-note">This is starter policy text for the project prototype. It should be reviewed if Tixora’s features or data practices change.</p>
+      </section>
+    </div>
   )
 }
 
