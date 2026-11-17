@@ -4,8 +4,10 @@ const events = [
   {
     id: 1,
     category: 'MUSIC',
-    title: 'Afterglow Rooftop Sessions',
+    title: 'Bengaluru Rooftop Indie Music Night',
     place: 'The Terrace, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9755, lng: 77.6068 },
     date: 'NOV 22',
     time: '7:00 PM',
     color: 'coral',
@@ -18,13 +20,15 @@ const events = [
   {
     id: 2,
     category: 'ART & CULTURE',
-    title: 'The Art of Slow Living',
+    title: 'Pottery, Prints & Local Art Open Studio',
     place: 'Gallery 404, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9716, lng: 77.5946 },
     date: 'NOV 24',
     time: '11:00 AM',
     color: 'lilac',
-    image: '/images/pottery-workshop.jpg',
-    imageAlt: 'Artist shaping clay on a pottery wheel',
+    image: '/images/pottery-vase.jpg',
+    imageAlt: 'Colorful painting and brush displayed in an open art studio',
     tag: 'Free entry',
     description: 'Slow down with a thoughtful collection of local art, small creative workshops, and conversations with the artists behind the work.',
     ticket: 'Free',
@@ -32,8 +36,10 @@ const events = [
   {
     id: 3,
     category: 'FOOD & DRINK',
-    title: 'Sunday Table: A Brunch Club',
+    title: 'Sunday Brunch & Coffee Social',
     place: 'Olive Courtyard, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9675, lng: 77.6001 },
     date: 'NOV 29',
     time: '10:30 AM',
     color: 'mint',
@@ -46,8 +52,10 @@ const events = [
   {
     id: 4,
     category: 'COMEDY',
-    title: 'Laughing Room Live',
+    title: 'Stand-up Comedy Night: Bengaluru',
     place: 'The Little Theatre, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9711, lng: 77.6012 },
     date: 'DEC 03',
     time: '8:00 PM',
     color: 'coral',
@@ -60,8 +68,10 @@ const events = [
   {
     id: 5,
     category: 'MUSIC',
-    title: 'City Lights Festival',
+    title: 'Open-Air Music Festival at Freedom Park',
     place: 'Freedom Park, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9797, lng: 77.5764 },
     date: 'DEC 06',
     time: '5:30 PM',
     color: 'lilac',
@@ -74,8 +84,10 @@ const events = [
   {
     id: 6,
     category: 'ART & CULTURE',
-    title: 'Clay & Coffee Studio',
+    title: 'Beginner Pottery Wheel Workshop',
     place: 'Mitti House, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9587, lng: 77.6448 },
     date: 'DEC 07',
     time: '10:00 AM',
     color: 'mint',
@@ -88,13 +100,15 @@ const events = [
   {
     id: 7,
     category: 'FOOD & DRINK',
-    title: 'Namma Night Market',
+    title: 'Church Street Street-Food Night Market',
     place: 'Church Street, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9756, lng: 77.6043 },
     date: 'DEC 12',
     time: '6:00 PM',
     color: 'coral',
-    image: '/images/food-festival.jpg',
-    imageAlt: 'People browsing food stands at an outdoor market',
+    image: '/images/night-market-food.jpg',
+    imageAlt: 'Colorful evening food stalls at a night market',
     tag: 'Free entry',
     description: 'Spend the evening wandering local food stalls, discovering small makers, and sharing a few plates with friends.',
     ticket: 'Free',
@@ -102,13 +116,15 @@ const events = [
   {
     id: 8,
     category: 'NIGHTLIFE',
-    title: 'After Hours at The Courtyard',
+    title: 'Courtyard DJ & Dance Night',
     place: 'The Courtyard, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9656, lng: 77.5956 },
     date: 'DEC 13',
     time: '8:30 PM',
     color: 'lilac',
-    image: '/images/night-festival.jpg',
-    imageAlt: 'Crowd at a lively outdoor night event with colorful lights',
+    image: '/images/dj-controller.jpg',
+    imageAlt: 'DJ mixing music beneath warm courtyard lights',
     tag: 'New',
     description: 'An easy-going night out with a live DJ, outdoor lights, and room to dance or catch up with friends.',
     ticket: 'From ₹399',
@@ -116,18 +132,203 @@ const events = [
   {
     id: 9,
     category: 'WORKSHOPS',
-    title: 'First Wheel: Pottery Workshop',
+    title: 'Make Your First Pot: Pottery Class',
     place: 'Mitti House, Bengaluru',
+    city: 'Bengaluru',
+    coordinates: { lat: 12.9587, lng: 77.6448 },
     date: 'DEC 14',
     time: '2:00 PM',
     color: 'mint',
-    image: '/images/pottery-workshop.jpg',
-    imageAlt: 'Hands learning to shape clay on a pottery wheel',
+    image: '/images/pottery-wheel.jpg',
+    imageAlt: 'Hands shaping a clay vase on a pottery wheel',
     tag: 'Beginner friendly',
     description: 'Learn the basics of shaping clay with a studio guide. Make your first small piece and enjoy a relaxed creative afternoon.',
     ticket: 'From ₹499',
   },
+  {
+    id: 10,
+    category: 'COMEDY',
+    title: 'New Voices Stand-up Night in Delhi',
+    place: 'The Laugh Loft, New Delhi',
+    city: 'Delhi',
+    coordinates: { lat: 28.6139, lng: 77.209 },
+    date: 'DEC 05',
+    time: '7:30 PM',
+    color: 'coral',
+    image: '/images/delhi-comedy.jpg',
+    imageAlt: 'Comic performing under a warm spotlight on a stage',
+    tag: 'New show',
+    description: 'A live stand-up show featuring emerging comics, short sets, and a relaxed late-evening crowd.',
+    ticket: 'From ₹299',
+  },
+  {
+    id: 11,
+    category: 'MUSIC',
+    title: 'Mumbai Indie Bands by the Bay',
+    place: 'Harbour Stage, Mumbai',
+    city: 'Mumbai',
+    coordinates: { lat: 19.076, lng: 72.8777 },
+    date: 'DEC 08',
+    time: '6:30 PM',
+    color: 'lilac',
+    image: '/images/mumbai-indie.jpg',
+    imageAlt: 'Sunset over a Mumbai waterfront with a live music stage',
+    tag: 'Outdoor show',
+    description: 'An outdoor gig with independent Mumbai bands, food stalls, and a sunset view over the waterfront.',
+    ticket: 'From ₹599',
+  },
+  {
+    id: 12,
+    category: 'NIGHTLIFE',
+    title: 'Chennai Rooftop DJ & Dance Session',
+    place: 'Skyroom, Chennai',
+    city: 'Chennai',
+    coordinates: { lat: 13.0827, lng: 80.2707 },
+    date: 'DEC 11',
+    time: '8:00 PM',
+    color: 'lilac',
+    image: '/images/nightlife-dj.jpg',
+    imageAlt: 'Rooftop DJ booth, city skyline, and decorative evening lights',
+    tag: 'Limited entry',
+    description: 'A rooftop evening with a local DJ, colorful lights, and a relaxed dance floor above the city.',
+    ticket: 'From ₹449',
+  },
+  {
+    id: 13,
+    category: 'WORKSHOPS',
+    title: 'Hyderabad Beginner Pottery Class',
+    place: 'Clay House Studio, Hyderabad',
+    city: 'Hyderabad',
+    coordinates: { lat: 17.385, lng: 78.4867 },
+    date: 'DEC 15',
+    time: '11:00 AM',
+    color: 'mint',
+    image: '/images/pottery-class.jpg',
+    imageAlt: 'A handmade clay pot shaped by a pottery class',
+    tag: 'Beginner friendly',
+    description: 'Learn basic wheel techniques from a studio artist, shape a small clay piece, and take home your finished work later.',
+    ticket: 'From ₹499',
+  },
+  {
+    id: 14,
+    category: 'MUSIC',
+    title: 'Kolkata Riverside Indie Sessions',
+    place: 'Millennium Park, Kolkata',
+    city: 'Kolkata',
+    coordinates: { lat: 22.5726, lng: 88.3639 },
+    date: 'DEC 18',
+    time: '6:30 PM',
+    color: 'lilac',
+    image: '/images/kolkata-festival.jpg',
+    imageAlt: 'A large crowd gathered for an outdoor festival performance',
+    tag: 'Outdoor show',
+    description: 'A sample listing for an open-air evening of independent music and local performers by the river.',
+    ticket: 'From ₹399',
+  },
+  {
+    id: 15,
+    category: 'FOOD & DRINK',
+    title: 'Pune After-Dark Food Lane',
+    place: 'Koregaon Park, Pune',
+    city: 'Pune',
+    coordinates: { lat: 18.5204, lng: 73.8567 },
+    date: 'DEC 19',
+    time: '6:00 PM',
+    color: 'coral',
+    image: '/images/pune-night.jpg',
+    imageAlt: 'A lively city street in Pune after dark',
+    tag: 'Free entry',
+    description: 'A sample listing for a casual evening discovering late-night eateries and neighborhood food spots.',
+    ticket: 'Free',
+  },
+  {
+    id: 16,
+    category: 'ART & CULTURE',
+    title: 'Ahmedabad Independent Film Evening',
+    place: 'Riverfront Arts Pavilion, Ahmedabad',
+    city: 'Ahmedabad',
+    coordinates: { lat: 23.0225, lng: 72.5714 },
+    date: 'DEC 20',
+    time: '7:00 PM',
+    color: 'mint',
+    image: '/images/cinema.jpg',
+    imageAlt: 'An intimate cinema hall prepared for a film screening',
+    tag: 'New',
+    description: 'A sample listing for a small independent film screening followed by a relaxed audience discussion.',
+    ticket: 'From ₹199',
+  },
+  {
+    id: 17,
+    category: 'ART & CULTURE',
+    title: 'Jaipur Old City Lights & Bazaar Walk',
+    place: 'Badi Chaupar, Jaipur',
+    city: 'Jaipur',
+    coordinates: { lat: 26.9124, lng: 75.7873 },
+    date: 'DEC 21',
+    time: '5:30 PM',
+    color: 'coral',
+    image: '/images/jaipur-market.jpg',
+    imageAlt: 'A busy Jaipur street market near the Hawa Mahal',
+    tag: 'Small group',
+    description: 'A sample guided walk through Jaipur’s historic market lanes, architecture, and evening street life.',
+    ticket: 'From ₹249',
+  },
+  {
+    id: 18,
+    category: 'FOOD & DRINK',
+    title: 'Lucknow Chaat & Awadhi Street-Food Trail',
+    place: 'Hazratganj, Lucknow',
+    city: 'Lucknow',
+    coordinates: { lat: 26.8467, lng: 80.9462 },
+    date: 'DEC 22',
+    time: '5:00 PM',
+    color: 'mint',
+    image: '/images/indian-food.jpg',
+    imageAlt: 'A street-food vendor preparing Indian chaat at a busy stall',
+    tag: 'Local favourites',
+    description: 'A sample listing for an evening food walk highlighting chaat, snacks, and classic Awadhi flavors.',
+    ticket: 'From ₹299',
+  },
+  {
+    id: 19,
+    category: 'NIGHTLIFE',
+    title: 'Kochi Fort Sunset Beats & Social',
+    place: 'Fort Kochi Beach, Kochi',
+    city: 'Kochi',
+    coordinates: { lat: 9.9312, lng: 76.2673 },
+    date: 'DEC 23',
+    time: '5:30 PM',
+    color: 'lilac',
+    image: '/images/night-market-crowd.jpg',
+    imageAlt: 'People enjoying a lively open-air evening gathering',
+    tag: 'Sunset plans',
+    description: 'A sample listing for a relaxed sunset gathering with music and an open-air social atmosphere.',
+    ticket: 'From ₹349',
+  },
 ]
+
+const cityCenters = {
+  Bengaluru: { lat: 12.9716, lng: 77.5946 },
+  Chennai: { lat: 13.0827, lng: 80.2707 },
+  Delhi: { lat: 28.6139, lng: 77.209 },
+  Hyderabad: { lat: 17.385, lng: 78.4867 },
+  Ahmedabad: { lat: 23.0225, lng: 72.5714 },
+  Jaipur: { lat: 26.9124, lng: 75.7873 },
+  Kochi: { lat: 9.9312, lng: 76.2673 },
+  Kolkata: { lat: 22.5726, lng: 88.3639 },
+  Lucknow: { lat: 26.8467, lng: 80.9462 },
+  Mumbai: { lat: 19.076, lng: 72.8777 },
+  Pune: { lat: 18.5204, lng: 73.8567 },
+}
+
+function distanceInKm(first, second) {
+  const radians = (degrees) => degrees * (Math.PI / 180)
+  const latitudeDifference = radians(second.lat - first.lat)
+  const longitudeDifference = radians(second.lng - first.lng)
+  const value = Math.sin(latitudeDifference / 2) ** 2
+    + Math.cos(radians(first.lat)) * Math.cos(radians(second.lat)) * Math.sin(longitudeDifference / 2) ** 2
+  return 6371 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value))
+}
 
 function getPage(pathname) {
   if (pathname === '/login') return 'login'
@@ -300,6 +501,31 @@ function HomePage({ onNavigate }) {
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [priceFilter, setPriceFilter] = useState('ALL')
+  const [selectedLocation, setSelectedLocation] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem('tixora-location') || 'null')
+    } catch {
+      return null
+    }
+  })
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false)
+  const [selectedCity, setSelectedCity] = useState('Bengaluru')
+  const [isLocating, setIsLocating] = useState(false)
+  const [locationMessage, setLocationMessage] = useState('')
+
+  useEffect(() => {
+    if (!isLocationDialogOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsLocationDialogOpen(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isLocationDialogOpen])
   const categories = [
     { value: 'ALL', label: 'All events' },
     { value: 'MUSIC', label: 'Music' },
@@ -310,13 +536,60 @@ function HomePage({ onNavigate }) {
     { value: 'WORKSHOPS', label: 'Workshops' },
   ]
   const normalizedSearch = searchText.trim().toLowerCase()
-  const visibleEvents = events.filter((event) => {
+  const locationEvents = selectedLocation
+    ? events
+      .map((event) => ({ ...event, distanceKm: distanceInKm(selectedLocation, event.coordinates) }))
+      .filter((event) => event.distanceKm <= 50)
+      .sort((first, second) => first.distanceKm - second.distanceKm)
+    : events.map((event) => ({ ...event, distanceKm: null }))
+  const visibleEvents = locationEvents.filter((event) => {
     const matchesCategory = activeCategory === 'ALL' || event.category === activeCategory
-    const searchableText = `${event.title} ${event.place} ${event.category} ${event.description}`.toLowerCase()
+    const searchableText = `${event.title} ${event.place} ${event.city} ${event.category} ${event.description}`.toLowerCase()
     const isFree = event.ticket.toLowerCase() === 'free'
     const matchesPrice = priceFilter === 'ALL' || (priceFilter === 'FREE' ? isFree : !isFree)
     return matchesCategory && matchesPrice && searchableText.includes(normalizedSearch)
   })
+
+  function saveLocation(location) {
+    window.localStorage.setItem('tixora-location', JSON.stringify(location))
+    setSelectedLocation(location)
+    setLocationMessage('')
+    setIsLocationDialogOpen(false)
+  }
+
+  function chooseCity() {
+    const coordinates = cityCenters[selectedCity]
+    saveLocation({ label: selectedCity, ...coordinates })
+  }
+
+  function clearLocation() {
+    window.localStorage.removeItem('tixora-location')
+    setSelectedLocation(null)
+    setIsLocationDialogOpen(false)
+  }
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationMessage('Your browser does not support location sharing. Choose a city instead.')
+      return
+    }
+
+    setIsLocating(true)
+    setLocationMessage('')
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        saveLocation({ label: 'Near me', lat: coords.latitude, lng: coords.longitude })
+        setIsLocating(false)
+      },
+      (error) => {
+        setLocationMessage(error.code === error.PERMISSION_DENIED
+          ? 'Location permission was denied. You can choose a city instead.'
+          : 'We could not get your location. Choose a city or try again.')
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    )
+  }
 
   return (
     <main>
@@ -327,6 +600,17 @@ function HomePage({ onNavigate }) {
           <p className="hero-description">
             Find the little moments and big nights happening around you. Your next favourite thing is closer than you think.
           </p>
+          <form className="hero-search" role="search" onSubmit={(event) => { event.preventDefault(); document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' }) }}>
+            <span className="hero-search-icon" aria-hidden="true">⌕</span>
+            <input
+              aria-label="Search shows and events"
+              type="search"
+              placeholder="Search shows, genres, venues, or cities"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+            <button type="submit">Search <span aria-hidden="true">↗</span></button>
+          </form>
           <div className="hero-actions">
             <a className="button button-primary" href="#events">Explore events <span aria-hidden="true">↗</span></a>
             <button className="button button-quiet" type="button" onClick={() => onNavigate('/signup?role=organizer')}>Host an event</button>
@@ -359,17 +643,18 @@ function HomePage({ onNavigate }) {
           </div>
           <a className="browse-link" href="#events">See all events <span>↗</span></a>
         </div>
+        <div className="location-panel">
+          <span className="location-pin" aria-hidden="true">⌖</span>
+          <div className="location-copy">
+            <span className="event-category">EVENTS NEAR</span>
+            <strong>{selectedLocation?.label || 'Choose your location'}</strong>
+            <p>{selectedLocation ? 'Showing sample events within 50 km, nearest first.' : 'Set a city or share your location to find nearby events.'} All listings are demo examples.</p>
+          </div>
+          <button type="button" onClick={() => { setLocationMessage(''); setIsLocationDialogOpen(true) }}>
+            {selectedLocation ? 'Change location' : 'Set location'} <span aria-hidden="true">↗</span>
+          </button>
+        </div>
         <div className="event-controls">
-          <label className="event-search">
-            <span aria-hidden="true">⌕</span>
-            <input
-              aria-label="Search events"
-              type="search"
-              placeholder="Try comedy, music, pottery…"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-            />
-          </label>
           <label className="price-filter-label">
             <span>Price</span>
             <select aria-label="Filter events by ticket price" value={priceFilter} onChange={(event) => setPriceFilter(event.target.value)}>
@@ -406,8 +691,31 @@ function HomePage({ onNavigate }) {
         ) : (
           <div className="empty-events">
             <span aria-hidden="true">⌕</span>
-            <div><strong>No events found</strong><p>Try another search or choose a different category.</p></div>
+            <div><strong>{selectedLocation ? `No events near ${selectedLocation.label}` : 'No events found'}</strong><p>{selectedLocation ? 'Try changing your location or search filters.' : 'Try another search or choose a different category.'}</p></div>
             <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL') }}>Reset search</button>
+          </div>
+        )}
+        {isLocationDialogOpen && (
+          <div className="legal-backdrop" onClick={() => setIsLocationDialogOpen(false)}>
+            <section className="location-dialog" role="dialog" aria-modal="true" aria-labelledby="location-dialog-title" onClick={(event) => event.stopPropagation()}>
+              <div className="legal-dialog-heading">
+                <div><p className="eyebrow">PERSONALISE YOUR DISCOVERY</p><h2 id="location-dialog-title">Where should we look?</h2></div>
+                <button className="legal-close" type="button" aria-label="Close location picker" onClick={() => setIsLocationDialogOpen(false)}>×</button>
+              </div>
+              <p className="location-dialog-intro">Choose a city, or share your device location to sort events by distance. Your choice stays in this browser.</p>
+              <label className="field-label" htmlFor="city-choice">Choose a city</label>
+              <select className="text-input city-select" id="city-choice" value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)}>
+                {Object.keys(cityCenters).map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+              <button className="button button-primary location-choose-button" type="button" onClick={chooseCity}>Show events near {selectedCity}</button>
+              <div className="location-divider"><span>or</span></div>
+              <button className="button location-device-button" type="button" onClick={useCurrentLocation} disabled={isLocating}>
+                {isLocating ? 'Finding your location…' : 'Use my current location'}
+              </button>
+              {locationMessage && <p className="location-error" role="alert">{locationMessage}</p>}
+              {selectedLocation && <button className="location-clear-button" type="button" onClick={clearLocation}>Clear saved location</button>}
+              <p className="location-privacy-note">Location is used only to filter this sample event list and is saved in this browser. Change or clear it here anytime.</p>
+            </section>
           </div>
         )}
       </section>
@@ -446,7 +754,8 @@ function EventCard({ event, onSelect }) {
         <span className="event-category">{event.category}</span>
         <strong className="event-title">{event.title}</strong>
         <span className="event-meta">{event.place}</span>
-        <span className="event-time">{event.time} <i>·</i> Bengaluru</span>
+        <span className="event-time">{event.time} <i>·</i> {event.city}</span>
+        {event.distanceKm !== null && <span className="event-distance">{event.distanceKm.toFixed(1)} km away</span>}
       </span>
     </button>
   )
@@ -478,7 +787,7 @@ function EventDetailsPage({ event, currentUser, onNavigate }) {
           <p className="event-detail-description">{event.description}</p>
           <div className="event-facts">
             <div><span className="fact-icon">◷</span><p><strong>{event.date} · {event.time}</strong><small>Doors open 30 minutes before</small></p></div>
-            <div><span className="fact-icon">⌖</span><p><strong>{event.place}</strong><small>Bengaluru, Karnataka</small></p></div>
+            <div><span className="fact-icon">⌖</span><p><strong>{event.place}</strong><small>{event.city}, India</small></p></div>
           </div>
           <div className="event-booking-card">
             <div><span className="event-category">TICKETS</span><strong>{event.ticket}</strong></div>
@@ -704,7 +1013,7 @@ function LegalDialog({ documentType, onClose }) {
               <h3>Information used</h3>
               <p>When you register, Tixora stores your name, email address, account role, and a hashed password. The app does not store your password in readable form.</p>
               <h3>How it is used</h3>
-              <p>Account details are used to sign you in and provide attendee or organiser features. Your sign-in token is kept in this browser session so you can stay signed in while using the app.</p>
+              <p>Account details are used to sign you in and provide attendee or organiser features. Your sign-in token is kept in this browser session. If you choose a city or share your device location, that choice is stored in this browser and used only to filter nearby sample events.</p>
               <h3>Storage and payments</h3>
               <p>Account data is stored in the project’s PostgreSQL database hosted through Supabase. The current prototype does not collect payment details.</p>
             </>
