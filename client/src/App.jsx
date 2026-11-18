@@ -334,18 +334,19 @@ function getPage(pathname) {
   if (pathname === '/login') return 'login'
   if (pathname === '/signup') return 'signup'
   if (pathname === '/account') return 'account'
+  if (pathname === '/organizer') return 'organizer'
   if (/^\/events\/\d+$/.test(pathname)) return 'event'
   return 'home'
 }
 
 function ProfileAvatar({ look = 'attendee', className = '' }) {
   const palettes = {
-    attendee: ['#ead8f4', '#58406d', '#f1b995', '#7750a4'],
-    organizer: ['#d8ece8', '#315a57', '#c88668', '#416e69'],
-    one: ['#f5dfd2', '#4f3c39', '#d99472', '#bd6f55'],
-    two: ['#e4e2f7', '#39334e', '#c9846f', '#6962a1'],
-    three: ['#dce9dc', '#34453b', '#b87a58', '#728765'],
-    four: ['#f7e6c9', '#594738', '#e1a37e', '#d09b4f'],
+    attendee: ['#f3dfe6', '#58434f', '#e3ae96', '#ad5d79'],
+    organizer: ['#e9dce8', '#473b49', '#cd937b', '#80627e'],
+    one: ['#f4e2d9', '#4f3c39', '#d99472', '#bd7482'],
+    two: ['#eee0eb', '#39334e', '#c9846f', '#8a6a91'],
+    three: ['#e3ebe2', '#34453b', '#b87a58', '#809681'],
+    four: ['#f7eadb', '#594738', '#e1a37e', '#c0926b'],
   }
   const [background, hair, skin, shirt] = palettes[look] || palettes.attendee
 
@@ -421,6 +422,17 @@ function App() {
     }
   }, [currentUser, page, sessionReady])
 
+  useEffect(() => {
+    if (!sessionReady || page !== 'organizer') return
+    if (!currentUser) {
+      window.history.replaceState({}, '', '/login')
+      setPage('login')
+    } else if (currentUser.role !== 'organizer') {
+      window.history.replaceState({}, '', '/account')
+      setPage('account')
+    }
+  }, [currentUser, page, sessionReady])
+
   function finishSignIn(session) {
     window.sessionStorage.setItem('tickethub-session', JSON.stringify(session))
     setCurrentUser(session.user)
@@ -459,6 +471,9 @@ function App() {
       {page === 'account' && currentUser && (
         <AccountPage user={currentUser} onNavigate={navigate} />
       )}
+      {page === 'organizer' && currentUser?.role === 'organizer' && (
+        <OrganizerDashboard user={currentUser} onNavigate={navigate} />
+      )}
 
       <Footer onNavigate={navigate} />
     </div>
@@ -469,7 +484,7 @@ function Header({ currentUser, onNavigate, onSignOut }) {
   return (
     <header className="site-header">
       <button className="brand" type="button" onClick={() => onNavigate('/')} aria-label="Tixora home">
-        <img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">Tixora</span>
+        <img className="brand-mark" src="/tixora-mark.svg" alt="" /><span className="brand-name">Tixora</span>
       </button>
       <nav className="main-nav" aria-label="Main navigation">
         <a href="/#events" onClick={(event) => { event.preventDefault(); onNavigate('/#events') }}>Discover</a>
@@ -510,6 +525,16 @@ function HomePage({ onNavigate }) {
   })
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false)
   const [selectedCity, setSelectedCity] = useState('Bengaluru')
+  const [isCommunityDialogOpen, setIsCommunityDialogOpen] = useState(false)
+  const [joinedCommunity, setJoinedCommunity] = useState(() => window.localStorage.getItem('tixora-community-membership') || '')
+  const [communityCity, setCommunityCity] = useState(() => {
+    const savedCommunity = window.localStorage.getItem('tixora-community-membership')
+    return savedCommunity && cityCenters[savedCommunity]
+      ? savedCommunity
+      : selectedLocation?.label && cityCenters[selectedLocation.label]
+        ? selectedLocation.label
+        : 'Bengaluru'
+  })
   const [isLocating, setIsLocating] = useState(false)
   const [locationMessage, setLocationMessage] = useState('')
 
@@ -526,6 +551,20 @@ function HomePage({ onNavigate }) {
       window.removeEventListener('keydown', closeOnEscape)
     }
   }, [isLocationDialogOpen])
+
+  useEffect(() => {
+    if (!isCommunityDialogOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsCommunityDialogOpen(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isCommunityDialogOpen])
   const categories = [
     { value: 'ALL', label: 'All events' },
     { value: 'MUSIC', label: 'Music' },
@@ -555,6 +594,18 @@ function HomePage({ onNavigate }) {
     setSelectedLocation(location)
     setLocationMessage('')
     setIsLocationDialogOpen(false)
+  }
+
+  function joinCommunity() {
+    window.localStorage.setItem('tixora-community-membership', communityCity)
+    setJoinedCommunity(communityCity)
+    saveLocation({ label: communityCity, ...cityCenters[communityCity] })
+    setIsCommunityDialogOpen(false)
+  }
+
+  function leaveCommunity() {
+    window.localStorage.removeItem('tixora-community-membership')
+    setJoinedCommunity('')
   }
 
   function chooseCity() {
@@ -622,7 +673,7 @@ function HomePage({ onNavigate }) {
               <ProfileAvatar look="three" className="community-avatar" />
               <ProfileAvatar look="four" className="community-avatar" />
             </div>
-            <p><strong>Good things happen together.</strong><br />Join your local community.</p>
+            <p><strong>Good things happen together.</strong><br /><button className="community-join-link" type="button" onClick={() => { setCommunityCity(joinedCommunity || (cityCenters[selectedLocation?.label] ? selectedLocation.label : 'Bengaluru')); setIsCommunityDialogOpen(true) }}>{joinedCommunity ? `Joined ${joinedCommunity} community` : 'Join your local community'} <span aria-hidden="true">↗</span></button></p>
           </div>
         </div>
         <div className="hero-art">
@@ -715,6 +766,29 @@ function HomePage({ onNavigate }) {
               {locationMessage && <p className="location-error" role="alert">{locationMessage}</p>}
               {selectedLocation && <button className="location-clear-button" type="button" onClick={clearLocation}>Clear saved location</button>}
               <p className="location-privacy-note">Location is used only to filter this sample event list and is saved in this browser. Change or clear it here anytime.</p>
+            </section>
+          </div>
+        )}
+        {isCommunityDialogOpen && (
+          <div className="legal-backdrop" onClick={() => setIsCommunityDialogOpen(false)}>
+            <section className="location-dialog community-dialog" role="dialog" aria-modal="true" aria-labelledby="community-dialog-title" onClick={(event) => event.stopPropagation()}>
+              <div className="legal-dialog-heading">
+                <div><p className="eyebrow">YOUR NEIGHBORHOOD, YOUR PEOPLE</p><h2 id="community-dialog-title">Join a local community</h2></div>
+                <button className="legal-close" type="button" aria-label="Close community window" onClick={() => setIsCommunityDialogOpen(false)}>×</button>
+              </div>
+              <p className="location-dialog-intro">Choose your city to join its Tixora community and find local plans together.</p>
+              <label className="field-label" htmlFor="community-city-choice">Choose a city</label>
+              <select className="text-input city-select" id="community-city-choice" value={communityCity} onChange={(event) => setCommunityCity(event.target.value)}>
+                {Object.keys(cityCenters).map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+              <p className="community-event-count">{events.filter((event) => event.city === communityCity).length} sample event listings for {communityCity}</p>
+              {joinedCommunity === communityCity ? (
+                <div className="community-joined-state" role="status"><span aria-hidden="true">✓</span><p><strong>You’re in the {communityCity} community.</strong><br />Your event browsing is set to this city.</p></div>
+              ) : (
+                <button className="button button-primary location-choose-button" type="button" onClick={joinCommunity}>Join {communityCity} community <span aria-hidden="true">↗</span></button>
+              )}
+              {joinedCommunity && <button className="community-leave-button" type="button" onClick={leaveCommunity}>Leave {joinedCommunity} community</button>}
+              <p className="location-privacy-note">Community membership is a prototype feature saved in this browser. Member chat and live community features are not connected yet.</p>
             </section>
           </div>
         )}
@@ -871,7 +945,7 @@ function AuthPage({ mode, onNavigate, onSuccess }) {
         <div className="auth-form-panel">
           <button className="back-link" type="button" onClick={() => onNavigate('/')}><span>←</span> Back to discover</button>
           <div className="auth-heading">
-            <img className="auth-mark-logo" src="/tixora-mark.png" alt="Tixora" />
+            <img className="auth-mark-logo" src="/tixora-mark.svg" alt="Tixora" />
             <p className="eyebrow">A GOOD PLAN STARTS HERE</p>
             <h1>{isSignup ? 'Come on in.' : 'Good to see you.'}</h1>
             <p>{isSignup ? 'Create your account and find something worth showing up for.' : 'Sign in to pick up where the good times left off.'}</p>
@@ -1025,6 +1099,219 @@ function LegalDialog({ documentType, onClose }) {
   )
 }
 
+function OrganizerDashboard({ user, onNavigate }) {
+  const [events, setEvents] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [form, setForm] = useState(emptyOrganizerEventForm)
+
+  async function requestOrganizerApi(path, options = {}) {
+    let token = ''
+    try {
+      token = JSON.parse(window.sessionStorage.getItem('tickethub-session') || '{}').token || ''
+    } catch {
+      token = ''
+    }
+
+    const response = await fetch(`/api/organizer/events${path}`, {
+      ...options,
+      headers: {
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    })
+    const result = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(result.error || 'We couldn’t complete that request. Please try again.')
+    return result
+  }
+
+  async function loadEvents() {
+    setIsLoading(true)
+    setError('')
+    try {
+      const result = await requestOrganizerApi('')
+      setEvents(result.events || [])
+    } catch (loadError) {
+      setError(loadError instanceof TypeError
+        ? 'We can’t reach Tixora right now. Check that the API and database are running, then retry.'
+        : loadError.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => { loadEvents() }, [])
+
+  function startNewEvent() {
+    setForm(emptyOrganizerEventForm())
+    setEditingId(null)
+    setError('')
+    setNotice('')
+    setIsFormOpen(true)
+    window.requestAnimationFrame(() => document.getElementById('organizer-event-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+
+  function startEditing(event) {
+    const localDate = new Date(event.startsAt)
+    localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset())
+    setForm({
+      title: event.title,
+      description: event.description,
+      venue: event.venue,
+      city: event.city,
+      startsAt: localDate.toISOString().slice(0, 16),
+      imageUrl: event.imageUrl || '',
+      ticketCapacity: String(event.ticketCapacity),
+      ticketPrice: String(event.ticketPrice),
+      status: event.status === 'published' ? 'published' : 'draft',
+    })
+    setEditingId(event.id)
+    setError('')
+    setNotice('')
+    setIsFormOpen(true)
+    window.requestAnimationFrame(() => document.getElementById('organizer-event-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+
+  async function saveEvent(submitEvent) {
+    submitEvent.preventDefault()
+    setIsSaving(true)
+    setError('')
+    setNotice('')
+    const payload = {
+      ...form,
+      startsAt: new Date(form.startsAt).toISOString(),
+      ticketCapacity: Number(form.ticketCapacity),
+      ticketPrice: Number(form.ticketPrice || 0),
+      imageUrl: form.imageUrl.trim() || null,
+    }
+
+    try {
+      await requestOrganizerApi(editingId ? `/${editingId}` : '', {
+        method: editingId ? 'PUT' : 'POST',
+        body: JSON.stringify(payload),
+      })
+      await loadEvents()
+      setIsFormOpen(false)
+      setEditingId(null)
+      setNotice(editingId ? 'Your event details have been updated.' : 'Your event has been created.')
+      setForm(emptyOrganizerEventForm())
+    } catch (saveError) {
+      setError(saveError instanceof TypeError
+        ? 'We can’t reach Tixora right now. Check that the API and database are running, then try again.'
+        : saveError.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function cancelEvent(event) {
+    if (!window.confirm(`Cancel “${event.title}”? This will mark the event as cancelled.`)) return
+    setError('')
+    setNotice('')
+    try {
+      await requestOrganizerApi(`/${event.id}`, { method: 'DELETE' })
+      await loadEvents()
+      setNotice('The event is now marked as cancelled.')
+    } catch (cancelError) {
+      setError(cancelError instanceof TypeError
+        ? 'We can’t reach Tixora right now. Please try again.'
+        : cancelError.message)
+    }
+  }
+
+  const publishedCount = events.filter((event) => event.status === 'published').length
+  const totalTicketsSold = events.reduce((total, event) => total + event.ticketsSold, 0)
+
+  return (
+    <main className="organizer-page">
+      <div className="organizer-heading">
+        <div>
+          <p className="eyebrow"><span className="eyebrow-line" /> ORGANIZER SPACE</p>
+          <h1>Let’s bring people together, {user.name.split(' ')[0]}.</h1>
+          <p>Manage your events and keep an eye on ticket availability.</p>
+        </div>
+        <button className="button button-primary" type="button" onClick={startNewEvent}>Create an event <span aria-hidden="true">↗</span></button>
+      </div>
+
+      <section className="organizer-stats" aria-label="Event summary">
+        <article><span>YOUR EVENTS</span><strong>{events.length}</strong><small>Including drafts and cancelled</small></article>
+        <article><span>PUBLISHED</span><strong>{publishedCount}</strong><small>Listings marked as published</small></article>
+        <article><span>TICKETS RESERVED</span><strong>{totalTicketsSold}</strong><small>Across your events</small></article>
+      </section>
+
+      {notice && <p className="organizer-notice" role="status">{notice}</p>}
+      {error && <div className="organizer-error" role="alert"><p>{error}</p><button type="button" onClick={() => { setError(''); loadEvents() }}>Try again</button></div>}
+
+      {isFormOpen && (
+        <section className="organizer-form-panel" id="organizer-event-form">
+          <div className="organizer-section-heading">
+            <div><p className="eyebrow">EVENT DETAILS</p><h2>{editingId ? 'Update your event' : 'Create a new event'}</h2></div>
+            <button className="organizer-close-form" type="button" onClick={() => { setIsFormOpen(false); setError('') }}>Close</button>
+          </div>
+          <form className="organizer-event-form" onSubmit={saveEvent}>
+            <label>Event title<input required minLength="3" maxLength="150" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="e.g. Indie music night by the lake" /></label>
+            <label>About the event<textarea required maxLength="5000" rows="4" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What can guests look forward to?" /></label>
+            <div className="organizer-form-row">
+              <label>Venue<input required maxLength="200" value={form.venue} onChange={(event) => setForm({ ...form, venue: event.target.value })} placeholder="Venue name" /></label>
+              <label>City<input required maxLength="100" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} placeholder="City" /></label>
+            </div>
+            <div className="organizer-form-row">
+              <label>Date and time<input required type="datetime-local" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} /></label>
+              <label>Ticket capacity<input required type="number" min="1" max="1000000" step="1" value={form.ticketCapacity} onChange={(event) => setForm({ ...form, ticketCapacity: event.target.value })} /></label>
+            </div>
+            <div className="organizer-form-row">
+              <label>Ticket price (₹)<input required type="number" min="0" step="0.01" value={form.ticketPrice} onChange={(event) => setForm({ ...form, ticketPrice: event.target.value })} /></label>
+              <label>Listing status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="draft">Save as draft</option><option value="published">Publish event</option></select></label>
+            </div>
+            <label>Cover image URL <span className="organizer-optional">(optional)</span><input type="url" value={form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} placeholder="https://example.com/your-event-photo.jpg" /></label>
+            <div className="organizer-form-actions">
+              <button className="button button-primary" type="submit" disabled={isSaving}>{isSaving ? 'Saving…' : editingId ? 'Save changes' : 'Create event'}</button>
+              <button className="button button-quiet" type="button" onClick={() => { setIsFormOpen(false); setError('') }}>Cancel</button>
+            </div>
+          </form>
+          <p className="organizer-form-note">This prototype stores event details and ticket limits. Online payment and public publishing are not connected yet.</p>
+        </section>
+      )}
+
+      <section className="organizer-events-section">
+        <div className="organizer-section-heading"><div><p className="eyebrow">YOUR EVENTS</p><h2>Event management</h2></div><button className="organizer-refresh" type="button" onClick={loadEvents} disabled={isLoading}>Refresh list</button></div>
+        {isLoading ? <div className="organizer-empty"><strong>Loading your events…</strong></div> : events.length === 0 ? (
+          <div className="organizer-empty"><strong>No events here yet.</strong><p>Create your first event to start tracking its details and ticket capacity.</p><button className="button button-primary" type="button" onClick={startNewEvent}>Create your first event</button></div>
+        ) : (
+          <div className="organizer-event-list">
+            {events.map((event) => (
+              <article className="organizer-event-row" key={event.id}>
+                {event.imageUrl ? <img src={event.imageUrl} alt="" /> : <div className="organizer-event-placeholder" aria-hidden="true">✦</div>}
+                <div className="organizer-event-main"><span className={`organizer-status organizer-status-${event.status}`}>{event.status}</span><h3>{event.title}</h3><p>{event.venue} · {event.city}</p><small>{new Date(event.startsAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</small></div>
+                <div className="organizer-ticket-count"><strong>{event.ticketsSold}<span> / {event.ticketCapacity}</span></strong><small>tickets reserved</small><small>{event.ticketsAvailable} available · ₹{event.ticketPrice.toFixed(2)}</small></div>
+                <div className="organizer-row-actions">
+                  {event.status !== 'cancelled' && <button type="button" onClick={() => startEditing(event)}>Edit</button>}
+                  {event.status !== 'cancelled' && <button className="organizer-cancel-action" type="button" onClick={() => cancelEvent(event)}>Cancel event</button>}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
+  )
+}
+
+function emptyOrganizerEventForm() {
+  const suggestedDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+  suggestedDate.setMinutes(suggestedDate.getMinutes() - suggestedDate.getTimezoneOffset())
+  return {
+    title: '', description: '', venue: '', city: '',
+    startsAt: suggestedDate.toISOString().slice(0, 16),
+    imageUrl: '', ticketCapacity: '50', ticketPrice: '0', status: 'draft',
+  }
+}
+
 function AccountPage({ user, onNavigate }) {
   const isOrganizer = user.role === 'organizer'
   return (
@@ -1035,10 +1322,10 @@ function AccountPage({ user, onNavigate }) {
         <p>Your {isOrganizer ? 'organizer' : 'attendee'} space is ready. Let’s make a good plan.</p>
         <div className="account-actions">
           <button className="button button-primary" type="button" onClick={() => onNavigate('/')}>{isOrganizer ? 'Explore events' : 'Find an event'} <span>↗</span></button>
-          {isOrganizer && <button className="button button-quiet" type="button" disabled>Create an event · coming soon</button>}
+          {isOrganizer && <button className="button button-dark" type="button" onClick={() => onNavigate('/organizer')}>Open organizer dashboard <span>↗</span></button>}
         </div>
       </div>
-      <div className="account-panel"><div className="account-panel-icon">{isOrganizer ? '↗' : '✦'}</div><div><span className="event-category">YOUR ACCOUNT</span><h2>{isOrganizer ? 'Ready to bring people together?' : 'Your next favourite memory is out there.'}</h2><p>{isOrganizer ? 'Event creation is the next thing we’re building.' : 'Browse what’s happening around you and save your spot.'}</p></div></div>
+      <div className="account-panel"><div className="account-panel-icon">{isOrganizer ? '↗' : '✦'}</div><div><span className="event-category">YOUR ACCOUNT</span><h2>{isOrganizer ? 'Ready to bring people together?' : 'Your next favourite memory is out there.'}</h2><p>{isOrganizer ? 'Create and manage listings, edit event details, and track reserved ticket counts.' : 'Browse what’s happening around you and save your spot.'}</p></div></div>
     </main>
   )
 }
@@ -1046,7 +1333,7 @@ function AccountPage({ user, onNavigate }) {
 function Footer({ onNavigate }) {
   return (
     <footer className="site-footer">
-      <button className="brand footer-brand" type="button" onClick={() => onNavigate('/')} aria-label="Tixora home"><img className="brand-mark" src="/tixora-mark.png" alt="" /><span className="brand-name">Tixora</span></button>
+      <button className="brand footer-brand" type="button" onClick={() => onNavigate('/')} aria-label="Tixora home"><img className="brand-mark" src="/tixora-mark.svg" alt="" /><span className="brand-name">Tixora</span></button>
       <p>Your next adventure, booked.</p>
       <span>© 2026 Tixora</span>
     </footer>
