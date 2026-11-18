@@ -125,7 +125,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .empty-events strong { font-family: var(--heading); font-size: 13px; }
 .empty-events p { margin: 5px 0 0; color: #898692; font-size: 10px; }
 .empty-events button { padding: 8px 11px; border: 1px solid #e3def5; border-radius: 6px; background: #f7f5ff; color: #5d4bbd; cursor: pointer; font-size: 9px; font-weight: 700; }
-.event-card { min-width: 0; overflow: hidden; padding: 0; border: 1px solid #edebe7; border-radius: 12px; background: #fff; cursor: pointer; text-align: left; transition: transform .2s ease, box-shadow .2s ease; }
+.event-card { min-width: 0; position: relative; overflow: hidden; padding: 0; border: 1px solid #edebe7; border-radius: 12px; background: #fff; cursor: pointer; text-align: left; transition: transform .2s ease, box-shadow .2s ease; }
+.event-card-main { width: 100%; display: block; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .event-card:hover { transform: translateY(-4px); box-shadow: 0 12px 35px #33303b12; }
 .event-art { height: 210px; position: relative; display: block; overflow: hidden; }
 .event-art-coral { background: #d48b79; }
@@ -151,6 +152,16 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .event-meta, .event-time { color: #858591; font-size: 10px; line-height: 1.8; }
 .event-distance { margin-top: 2px; color: #6655b4; font-size: 9px; font-weight: 700; }
 .event-time i { padding-inline: 3px; color: #b5a9df; font-style: normal; }
+.saved-events-toggle { min-height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 13px; border: 1px solid #eadce3; border-radius: 7px; background: #fff; color: #87536a; cursor: pointer; font-size: 10px; font-weight: 700; }
+.saved-events-toggle:hover, .saved-events-toggle.active { border-color: #d8a3b6; background: #f8e9ee; color: #793954; }
+.saved-events-toggle svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.saved-events-toggle.active svg { fill: #e8b7c6; }
+.saved-events-toggle > span { min-width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: #f2e1e8; color: #713b55; font-size: 8px; }
+.event-bookmark { width: 34px; height: 34px; position: absolute; right: 12px; bottom: 12px; z-index: 3; display: grid; place-items: center; padding: 0; border: 1px solid #ffffffbf; border-radius: 50%; background: #fffaf2ed; color: #77475e; cursor: pointer; box-shadow: 0 3px 10px #2a17231c; transition: transform .18s ease, background .18s ease, color .18s ease; }
+.event-bookmark:hover { transform: scale(1.08); background: #fff; color: #a34d6d; }
+.event-bookmark.saved { border-color: #b85878; background: #b85878; color: #fff; }
+.event-bookmark svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.event-bookmark.saved svg { fill: #fff; }
 
 .event-detail-page { min-height: calc(100vh - 245px); padding: 39px 4px 75px; }
 .event-back { margin-bottom: 25px; }
@@ -408,13 +419,17 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .category-filter { padding-inline: 10px; }
   .event-grid { grid-template-columns: 1fr; gap: 15px; }
   .empty-events { min-height: 155px; flex-wrap: wrap; padding: 19px; text-align: center; }
-  .event-card { display: grid; grid-template-columns: 39% 1fr; min-height: 139px; }
+  .event-card { display: block; min-height: 139px; }
+  .event-card-main { display: grid; grid-template-columns: 39% 1fr; min-height: 139px; }
   .event-art { height: 100%; min-height: 139px; }
   .event-date, .event-tag { top: 9px; min-height: 21px; padding-inline: 6px; font-size: 7px; }
   .event-date { left: 8px; }
   .event-tag { right: 7px; }
   .event-info { justify-content: center; padding: 12px; }
   .event-title { white-space: normal; font-size: 13px; line-height: 1.4; }
+  .event-bookmark { width: 29px; height: 29px; top: 42px; right: auto; bottom: auto; left: calc(39% - 36px); }
+  .event-bookmark svg { width: 15px; height: 15px; }
+  .saved-events-toggle { min-height: 34px; gap: 6px; padding-inline: 9px; font-size: 9px; }
   .event-meta, .event-time { font-size: 9px; }
   .event-detail-page { padding: 25px 0 52px; }
   .event-detail-art { min-height: 280px; }
@@ -592,3 +607,5 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #bd6
 .community-joined-state p { margin: 0; font-size: 9px; line-height: 1.6; }
 .community-joined-state strong { color: #405e4e; font-size: 10px; }
 .community-leave-button { display: block; margin: 12px auto 0; padding: 4px; border: 0; background: transparent; color: #a45c70; cursor: pointer; font-size: 9px; font-weight: 700; }
+.save-login-actions { display: flex; gap: 9px; }
+.save-login-actions .button { min-height: 42px; flex: 1; font-size: 10px; }

@@ -453,7 +453,7 @@ function App() {
         onSignOut={signOut}
       />
 
-      {page === 'home' && <HomePage onNavigate={navigate} />}
+      {page === 'home' && <HomePage onNavigate={navigate} currentUser={currentUser} />}
       {page === 'event' && (
         <EventDetailsPage
           event={events.find((item) => `/events/${item.id}` === window.location.pathname)}
@@ -512,10 +512,13 @@ function Header({ currentUser, onNavigate, onSignOut }) {
   )
 }
 
-function HomePage({ onNavigate }) {
+function HomePage({ onNavigate, currentUser }) {
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [priceFilter, setPriceFilter] = useState('ALL')
+  const [showSavedOnly, setShowSavedOnly] = useState(false)
+  const [savedEventIds, setSavedEventIds] = useState([])
+  const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(() => {
     try {
       return JSON.parse(window.localStorage.getItem('tixora-location') || 'null')
@@ -537,6 +540,20 @@ function HomePage({ onNavigate }) {
   })
   const [isLocating, setIsLocating] = useState(false)
   const [locationMessage, setLocationMessage] = useState('')
+
+  useEffect(() => {
+    if (!currentUser) {
+      setSavedEventIds([])
+      setShowSavedOnly(false)
+      return
+    }
+    try {
+      const savedIds = JSON.parse(window.localStorage.getItem(`tixora-saved-events:${currentUser.id}`) || '[]')
+      setSavedEventIds(Array.isArray(savedIds) ? savedIds.map(Number).filter((id) => Number.isInteger(id) && events.some((event) => event.id === id)) : [])
+    } catch {
+      setSavedEventIds([])
+    }
+  }, [currentUser?.id])
 
   useEffect(() => {
     if (!isLocationDialogOpen) return undefined
@@ -565,6 +582,20 @@ function HomePage({ onNavigate }) {
       window.removeEventListener('keydown', closeOnEscape)
     }
   }, [isCommunityDialogOpen])
+
+  useEffect(() => {
+    if (!isSavePromptOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsSavePromptOpen(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isSavePromptOpen])
   const categories = [
     { value: 'ALL', label: 'All events' },
     { value: 'MUSIC', label: 'Music' },
@@ -575,7 +606,7 @@ function HomePage({ onNavigate }) {
     { value: 'WORKSHOPS', label: 'Workshops' },
   ]
   const normalizedSearch = searchText.trim().toLowerCase()
-  const locationEvents = selectedLocation
+  const locationEvents = selectedLocation && !showSavedOnly
     ? events
       .map((event) => ({ ...event, distanceKm: distanceInKm(selectedLocation, event.coordinates) }))
       .filter((event) => event.distanceKm <= 50)
@@ -586,8 +617,23 @@ function HomePage({ onNavigate }) {
     const searchableText = `${event.title} ${event.place} ${event.city} ${event.category} ${event.description}`.toLowerCase()
     const isFree = event.ticket.toLowerCase() === 'free'
     const matchesPrice = priceFilter === 'ALL' || (priceFilter === 'FREE' ? isFree : !isFree)
-    return matchesCategory && matchesPrice && searchableText.includes(normalizedSearch)
+    const matchesSaved = !showSavedOnly || savedEventIds.includes(event.id)
+    return matchesCategory && matchesPrice && matchesSaved && searchableText.includes(normalizedSearch)
   })
+
+  function toggleSavedEvent(eventId) {
+    if (!currentUser) {
+      setIsSavePromptOpen(true)
+      return
+    }
+    setSavedEventIds((currentIds) => {
+      const nextIds = currentIds.includes(eventId)
+        ? currentIds.filter((savedId) => savedId !== eventId)
+        : [...currentIds, eventId]
+      window.localStorage.setItem(`tixora-saved-events:${currentUser.id}`, JSON.stringify(nextIds))
+      return nextIds
+    })
+  }
 
   function saveLocation(location) {
     window.localStorage.setItem('tixora-location', JSON.stringify(location))
@@ -690,16 +736,19 @@ function HomePage({ onNavigate }) {
         <div className="section-heading">
           <div>
             <p className="eyebrow"><span className="eyebrow-line" /> AROUND YOU</p>
-            <h2>Plans worth making.</h2>
+            <h2>{showSavedOnly ? 'Saved for later.' : 'Plans worth making.'}</h2>
           </div>
-          <a className="browse-link" href="#events">See all events <span>↗</span></a>
+          <button className={`saved-events-toggle ${showSavedOnly ? 'active' : ''}`} type="button" aria-pressed={showSavedOnly} onClick={() => currentUser ? setShowSavedOnly(!showSavedOnly) : setIsSavePromptOpen(true)}>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h10v13l-5-3.2-5 3.2v-13Z" /></svg>
+            Saved <span>{savedEventIds.length}</span>
+          </button>
         </div>
         <div className="location-panel">
           <span className="location-pin" aria-hidden="true">⌖</span>
           <div className="location-copy">
             <span className="event-category">EVENTS NEAR</span>
             <strong>{selectedLocation?.label || 'Choose your location'}</strong>
-            <p>{selectedLocation ? 'Showing sample events within 50 km, nearest first.' : 'Set a city or share your location to find nearby events.'} All listings are demo examples.</p>
+            <p>{showSavedOnly ? 'Saved events from all cities.' : selectedLocation ? 'Showing sample events within 50 km, nearest first.' : 'Set a city or share your location to find nearby events.'} All listings are demo examples.</p>
           </div>
           <button type="button" onClick={() => { setLocationMessage(''); setIsLocationDialogOpen(true) }}>
             {selectedLocation ? 'Change location' : 'Set location'} <span aria-hidden="true">↗</span>
@@ -731,19 +780,19 @@ function HomePage({ onNavigate }) {
         </div>
         <div className="results-summary" aria-live="polite">
           <span><strong>{visibleEvents.length}</strong> {visibleEvents.length === 1 ? 'event' : 'events'} to explore</span>
-          {(activeCategory !== 'ALL' || priceFilter !== 'ALL' || searchText) && (
-            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL') }}>Clear filters</button>
+          {(activeCategory !== 'ALL' || priceFilter !== 'ALL' || searchText || showSavedOnly) && (
+            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL'); setShowSavedOnly(false) }}>Clear filters</button>
           )}
         </div>
         {visibleEvents.length > 0 ? (
           <div className="event-grid">
-            {visibleEvents.map((event) => <EventCard event={event} key={event.id} onSelect={() => onNavigate(`/events/${event.id}`)} />)}
+            {visibleEvents.map((event) => <EventCard event={event} key={event.id} isSaved={Boolean(currentUser) && savedEventIds.includes(event.id)} onToggleSave={toggleSavedEvent} onSelect={() => onNavigate(`/events/${event.id}`)} />)}
           </div>
         ) : (
           <div className="empty-events">
             <span aria-hidden="true">⌕</span>
-            <div><strong>{selectedLocation ? `No events near ${selectedLocation.label}` : 'No events found'}</strong><p>{selectedLocation ? 'Try changing your location or search filters.' : 'Try another search or choose a different category.'}</p></div>
-            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL') }}>Reset search</button>
+            <div><strong>{showSavedOnly ? 'Nothing saved just yet' : selectedLocation ? `No events near ${selectedLocation.label}` : 'No events found'}</strong><p>{showSavedOnly ? 'Use the bookmark on an event card to keep it here for later.' : selectedLocation ? 'Try changing your location or search filters.' : 'Try another search or choose a different category.'}</p></div>
+            <button type="button" onClick={() => { setSearchText(''); setActiveCategory('ALL'); setPriceFilter('ALL'); setShowSavedOnly(false) }}>{showSavedOnly ? 'Browse all events' : 'Reset search'}</button>
           </div>
         )}
         {isLocationDialogOpen && (
@@ -792,6 +841,22 @@ function HomePage({ onNavigate }) {
             </section>
           </div>
         )}
+        {isSavePromptOpen && (
+          <div className="legal-backdrop" onClick={() => setIsSavePromptOpen(false)}>
+            <section className="location-dialog save-login-dialog" role="dialog" aria-modal="true" aria-labelledby="save-login-title" onClick={(event) => event.stopPropagation()}>
+              <div className="legal-dialog-heading">
+                <div><p className="eyebrow">KEEP YOUR PLANS CLOSE</p><h2 id="save-login-title">Sign in to save events</h2></div>
+                <button className="legal-close" type="button" aria-label="Close sign-in prompt" onClick={() => setIsSavePromptOpen(false)}>×</button>
+              </div>
+              <p className="location-dialog-intro">Create an account or sign in to bookmark events and find them in your saved list later.</p>
+              <div className="save-login-actions">
+                <button className="button button-primary" type="button" onClick={() => onNavigate('/login')}>Log in</button>
+                <button className="button button-quiet" type="button" onClick={() => onNavigate('/signup')}>Create account</button>
+              </div>
+              <p className="location-privacy-note">Your saved list is kept separately for each account in this browser.</p>
+            </section>
+          </div>
+        )}
       </section>
 
       <section className="how-section" id="how-it-works">
@@ -815,23 +880,35 @@ function HomePage({ onNavigate }) {
   )
 }
 
-function EventCard({ event, onSelect }) {
+function EventCard({ event, isSaved, onToggleSave, onSelect }) {
   return (
-    <button className="event-card" type="button" onClick={onSelect}>
-      <span className={`event-art event-art-${event.color}`}>
-        <img className="event-photo" src={event.image} alt={event.imageAlt} loading="lazy" />
-        <span className="event-image-shade" aria-hidden="true" />
-        <span className="event-date">{event.date}</span>
-        <span className="event-tag">{event.tag}</span>
-      </span>
-      <span className="event-info">
-        <span className="event-category">{event.category}</span>
-        <strong className="event-title">{event.title}</strong>
-        <span className="event-meta">{event.place}</span>
-        <span className="event-time">{event.time} <i>·</i> {event.city}</span>
-        {event.distanceKm !== null && <span className="event-distance">{event.distanceKm.toFixed(1)} km away</span>}
-      </span>
-    </button>
+    <article className="event-card">
+      <button className="event-card-main" type="button" onClick={onSelect} aria-label={`View ${event.title}`}>
+        <span className={`event-art event-art-${event.color}`}>
+          <img className="event-photo" src={event.image} alt={event.imageAlt} loading="lazy" />
+          <span className="event-image-shade" aria-hidden="true" />
+          <span className="event-date">{event.date}</span>
+          <span className="event-tag">{event.tag}</span>
+        </span>
+        <span className="event-info">
+          <span className="event-category">{event.category}</span>
+          <strong className="event-title">{event.title}</strong>
+          <span className="event-meta">{event.place}</span>
+          <span className="event-time">{event.time} <i>·</i> {event.city}</span>
+          {event.distanceKm !== null && <span className="event-distance">{event.distanceKm.toFixed(1)} km away</span>}
+        </span>
+      </button>
+      <button
+        className={`event-bookmark ${isSaved ? 'saved' : ''}`}
+        type="button"
+        aria-label={isSaved ? `Remove ${event.title} from saved events` : `Save ${event.title} for later`}
+        aria-pressed={isSaved}
+        title={isSaved ? 'Remove from saved events' : 'Save for later'}
+        onClick={() => onToggleSave(event.id)}
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h10v13l-5-3.2-5 3.2v-13Z" /></svg>
+      </button>
+    </article>
   )
 }
 
