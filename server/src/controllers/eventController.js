@@ -1,12 +1,13 @@
 import { pool } from '../config/db.js'
 
 const EVENT_SELECT = `
-  SELECT e.event_id, e.organizer_id, e.title, e.description, e.venue, e.city,
+  SELECT e.event_id, e.organizer_id, organizer.name AS host_name, e.title, e.category, e.description, e.venue, e.city,
          e.starts_at, e.image_url, e.status, e.created_at,
          COALESCE(t.ticket_capacity, 0)::int AS ticket_capacity,
          COALESCE(t.tickets_sold, 0)::int AS tickets_sold,
          COALESCE(t.ticket_price, 0)::numeric AS ticket_price
   FROM events e
+  JOIN users organizer ON organizer.user_id = e.organizer_id
   LEFT JOIN LATERAL (
     SELECT SUM(total_quantity) AS ticket_capacity,
            SUM(sold_quantity) AS tickets_sold,
@@ -16,7 +17,8 @@ const EVENT_SELECT = `
   ) t ON TRUE
 `
 
-const EVENT_FIELDS = ['title', 'description', 'venue', 'city', 'startsAt', 'imageUrl', 'ticketCapacity', 'ticketPrice', 'status']
+const EVENT_CATEGORIES = ['MUSIC', 'COMEDY', 'ART & CULTURE', 'FOOD & DRINK', 'NIGHTLIFE', 'WORKSHOPS', 'OTHER']
+const EVENT_FIELDS = ['title', 'category', 'description', 'venue', 'city', 'startsAt', 'imageUrl', 'ticketCapacity', 'ticketPrice', 'status']
 
 function validateEventInput(body, { partial = false } = {}) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -51,6 +53,12 @@ function validateEventInput(body, { partial = false } = {}) {
     const value = body[field].trim()
     if (value.length < min || value.length > max) errors.push(`${label} must be ${min === 1 ? 'between 1' : `between ${min}`} and ${max} characters.`)
     else values[field] = value
+  }
+
+  if (!partial || Object.hasOwn(body, 'category')) {
+    const category = body.category ?? 'OTHER'
+    if (!EVENT_CATEGORIES.includes(category)) errors.push(`category must be one of: ${EVENT_CATEGORIES.join(', ')}.`)
+    else values.category = category
   }
 
   if (!partial || Object.hasOwn(body, 'startsAt')) {
@@ -102,7 +110,9 @@ function eventResponse(row) {
   return {
     id: row.event_id,
     organizerId: row.organizer_id,
+    hostName: row.host_name,
     title: row.title,
+    category: row.category,
     description: row.description,
     venue: row.venue,
     city: row.city,
@@ -115,6 +125,12 @@ function eventResponse(row) {
     ticketPrice: Number(row.ticket_price),
     createdAt: row.created_at,
   }
+}
+
+function publicEventResponse(row) {
+  const event = eventResponse(row)
+  const { organizerId, ...publicEvent } = event
+  return publicEvent
 }
 
 function parseEventId(value) {
@@ -130,6 +146,53 @@ export async function listOrganizerEvents(request, response) {
     [request.user.userId],
   )
   return response.status(200).json({ events: result.rows.map(eventResponse) })
+}
+
+export async function listPublicEvents(request, response) {
+  const search = typeof request.query.search === 'string' ? request.query.search.trim().slice(0, 120) : ''
+  const city = typeof request.query.city === 'string' ? request.query.city.trim().slice(0, 100) : ''
+  const category = typeof request.query.category === 'string' ? request.query.category.trim().toUpperCase() : ''
+  const price = typeof request.query.price === 'string' ? request.query.price.trim().toUpperCase() : ''
+  if (category && !EVENT_CATEGORIES.includes(category)) return response.status(400).json({ error: 'Choose a valid event category.' })
+  if (price && !['FREE', 'PAID'].includes(price)) return response.status(400).json({ error: 'Price must be FREE or PAID.' })
+
+  const conditions = ["e.status = 'published'", 'e.starts_at >= NOW()']
+  const parameters = []
+  if (search) {
+    parameters.push(`%${search}%`)
+    conditions.push(`(e.title ILIKE $${parameters.length} OR e.description ILIKE $${parameters.length} OR e.venue ILIKE $${parameters.length} OR e.city ILIKE $${parameters.length})`)
+  }
+  if (city) {
+    parameters.push(city)
+    conditions.push(`e.city ILIKE $${parameters.length}`)
+  }
+  if (category) {
+    parameters.push(category)
+    conditions.push(`e.category = $${parameters.length}`)
+  }
+  if (price === 'FREE') conditions.push('COALESCE(t.ticket_price, 0) = 0')
+  if (price === 'PAID') conditions.push('COALESCE(t.ticket_price, 0) > 0')
+
+  const result = await pool.query(
+    `${EVENT_SELECT}
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY e.starts_at ASC, e.event_id ASC
+     LIMIT 100`,
+    parameters,
+  )
+  return response.status(200).json({ events: result.rows.map(publicEventResponse) })
+}
+
+export async function getPublicEvent(request, response) {
+  const eventId = parseEventId(request.params.eventId)
+  if (!eventId) return response.status(400).json({ error: 'Event ID must be a positive whole number.' })
+
+  const result = await pool.query(
+    `${EVENT_SELECT} WHERE e.event_id = $1 AND e.status = 'published'`,
+    [eventId],
+  )
+  if (result.rowCount === 0) return response.status(404).json({ error: 'Event not found.' })
+  return response.status(200).json({ event: publicEventResponse(result.rows[0]) })
 }
 
 export async function getOrganizerEvent(request, response) {
@@ -153,10 +216,10 @@ export async function createOrganizerEvent(request, response) {
   try {
     await client.query('BEGIN')
     const eventResult = await client.query(
-      `INSERT INTO events (organizer_id, title, description, venue, city, starts_at, image_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO events (organizer_id, title, category, description, venue, city, starts_at, image_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING event_id`,
-      [request.user.userId, value.title, value.description, value.venue, value.city, value.startsAt, value.imageUrl, value.status ?? 'draft'],
+      [request.user.userId, value.title, value.category, value.description, value.venue, value.city, value.startsAt, value.imageUrl, value.status ?? 'draft'],
     )
     const eventId = eventResult.rows[0].event_id
     await client.query(
@@ -198,7 +261,7 @@ export async function updateOrganizerEvent(request, response) {
     }
 
     const columns = {
-      title: 'title', description: 'description', venue: 'venue', city: 'city',
+      title: 'title', category: 'category', description: 'description', venue: 'venue', city: 'city',
       startsAt: 'starts_at', imageUrl: 'image_url', status: 'status',
     }
     const assignments = []

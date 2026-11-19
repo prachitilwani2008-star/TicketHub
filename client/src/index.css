@@ -149,6 +149,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .event-info { display: flex; flex-direction: column; padding: 17px 18px 19px; }
 .event-category { color: #8b849d; font-size: 8px; font-weight: 700; letter-spacing: 1.2px; }
 .event-title { overflow: hidden; margin: 8px 0 9px; color: #303142; font-family: var(--heading); font-size: 16px; font-weight: 700; letter-spacing: -.5px; text-overflow: ellipsis; white-space: nowrap; }
+.event-host { margin: -3px 0 4px; color: #98627a; font-size: 9px; font-weight: 600; }
 .event-meta, .event-time { color: #858591; font-size: 10px; line-height: 1.8; }
 .event-distance { margin-top: 2px; color: #6655b4; font-size: 9px; font-weight: 700; }
 .event-time i { padding-inline: 3px; color: #b5a9df; font-style: normal; }

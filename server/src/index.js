@@ -1,6 +1,7 @@
 import express from 'express'
 import { pool } from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
+import publicEventRoutes from './routes/publicEventRoutes.js'
 import organizerEventRoutes from './routes/organizerEventRoutes.js'
 import { getJwtSecret } from './utils/jwt.js'
 
@@ -9,6 +10,7 @@ const port = process.env.PORT || 5055
 
 app.use(express.json())
 app.use('/api/auth', authRoutes)
+app.use('/api/events', publicEventRoutes)
 app.use('/api/organizer/events', organizerEventRoutes)
 
 app.get('/api/health', async (_request, response) => {

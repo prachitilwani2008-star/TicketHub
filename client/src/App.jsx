@@ -330,13 +330,49 @@ function distanceInKm(first, second) {
   return 6371 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value))
 }
 
+function formatDistance(distanceKm) {
+  if (distanceKm < 0.05) return 'Under 0.1 km away'
+  return `≈ ${distanceKm.toFixed(1)} km away`
+}
+
 function getPage(pathname) {
   if (pathname === '/login') return 'login'
   if (pathname === '/signup') return 'signup'
   if (pathname === '/account') return 'account'
   if (pathname === '/organizer') return 'organizer'
-  if (/^\/events\/\d+$/.test(pathname)) return 'event'
+  if (/^\/events\/(?:\d+|db-\d+)$/.test(pathname)) return 'event'
   return 'home'
+}
+
+function toPublicEventCard(event) {
+  const startsAt = new Date(event.startsAt)
+  const city = event.city || 'Location to be announced'
+  const cityCenter = Object.entries(cityCenters).find(([name]) => name.toLowerCase() === city.toLowerCase())?.[1]
+  const categoryImages = {
+    MUSIC: '/images/concert-crowd.jpg', COMEDY: '/images/standup-comedy.jpg',
+    'ART & CULTURE': '/images/pottery-vase.jpg', 'FOOD & DRINK': '/images/indian-food.jpg',
+    NIGHTLIFE: '/images/night-market-crowd.jpg', WORKSHOPS: '/images/pottery-wheel.jpg', OTHER: '/images/concert-crowd.jpg',
+  }
+  const price = Number(event.ticketPrice || 0)
+  return {
+    id: `db-${event.id}`,
+    category: event.category || 'OTHER',
+    title: event.title,
+    hostName: event.hostName || 'Event organizer',
+    place: event.venue,
+    city,
+    coordinates: cityCenter || null,
+    date: Number.isNaN(startsAt.getTime()) ? 'DATE TBA' : startsAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase(),
+    time: Number.isNaN(startsAt.getTime()) ? 'Time to be announced' : startsAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    color: 'coral',
+    image: event.imageUrl || categoryImages[event.category] || categoryImages.OTHER,
+    imageAlt: `${event.category || 'Community'} event: ${event.title}`,
+    tag: `${event.ticketsAvailable} tickets left`,
+    description: event.description,
+    ticket: price === 0 ? 'Free' : `From ₹${price.toLocaleString('en-IN')}`,
+    isDemo: false,
+    ticketsAvailable: event.ticketsAvailable,
+  }
 }
 
 function ProfileAvatar({ look = 'attendee', className = '' }) {
@@ -370,6 +406,17 @@ function App() {
   const [page, setPage] = useState(() => getPage(window.location.pathname))
   const [currentUser, setCurrentUser] = useState(null)
   const [sessionReady, setSessionReady] = useState(false)
+  const [publicEvents, setPublicEvents] = useState([])
+
+  useEffect(() => {
+    fetch('/api/events')
+      .then((response) => {
+        if (!response.ok) throw new Error('Could not load events')
+        return response.json()
+      })
+      .then(({ events: listedEvents = [] }) => setPublicEvents(listedEvents.map(toPublicEventCard)))
+      .catch(() => setPublicEvents([]))
+  }, [])
 
   function navigate(path) {
     window.history.pushState({}, '', path)
@@ -453,10 +500,12 @@ function App() {
         onSignOut={signOut}
       />
 
-      {page === 'home' && <HomePage onNavigate={navigate} currentUser={currentUser} />}
+      {page === 'home' && <HomePage onNavigate={navigate} currentUser={currentUser} publicEvents={publicEvents} />}
       {page === 'event' && (
         <EventDetailsPage
-          event={events.find((item) => `/events/${item.id}` === window.location.pathname)}
+          event={window.location.pathname.match(/^\/events\/db-(\d+)$/)
+            ? publicEvents.find((item) => item.id === `db-${window.location.pathname.match(/^\/events\/db-(\d+)$/)[1]}`)
+            : events.find((item) => `/events/${item.id}` === window.location.pathname)}
           currentUser={currentUser}
           onNavigate={navigate}
         />
@@ -512,7 +561,7 @@ function Header({ currentUser, onNavigate, onSignOut }) {
   )
 }
 
-function HomePage({ onNavigate, currentUser }) {
+function HomePage({ onNavigate, currentUser, publicEvents }) {
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [priceFilter, setPriceFilter] = useState('ALL')
@@ -549,7 +598,7 @@ function HomePage({ onNavigate, currentUser }) {
     }
     try {
       const savedIds = JSON.parse(window.localStorage.getItem(`tixora-saved-events:${currentUser.id}`) || '[]')
-      setSavedEventIds(Array.isArray(savedIds) ? savedIds.map(Number).filter((id) => Number.isInteger(id) && events.some((event) => event.id === id)) : [])
+      setSavedEventIds(Array.isArray(savedIds) ? savedIds.filter((id) => typeof id === 'string' || Number.isInteger(id)) : [])
     } catch {
       setSavedEventIds([])
     }
@@ -604,14 +653,17 @@ function HomePage({ onNavigate, currentUser }) {
     { value: 'FOOD & DRINK', label: 'Food & drink' },
     { value: 'NIGHTLIFE', label: 'Nightlife' },
     { value: 'WORKSHOPS', label: 'Workshops' },
+    { value: 'OTHER', label: 'Other' },
   ]
+  const catalogEvents = [...publicEvents, ...events.map((event) => ({ ...event, hostName: 'Tixora sample host', isDemo: true, tag: `Sample · ${event.tag}` }))]
   const normalizedSearch = searchText.trim().toLowerCase()
   const locationEvents = selectedLocation && !showSavedOnly
-    ? events
+    ? catalogEvents
+      .filter((event) => event.coordinates)
       .map((event) => ({ ...event, distanceKm: distanceInKm(selectedLocation, event.coordinates) }))
       .filter((event) => event.distanceKm <= 50)
       .sort((first, second) => first.distanceKm - second.distanceKm)
-    : events.map((event) => ({ ...event, distanceKm: null }))
+    : catalogEvents.map((event) => ({ ...event, distanceKm: null }))
   const visibleEvents = locationEvents.filter((event) => {
     const matchesCategory = activeCategory === 'ALL' || event.category === activeCategory
     const searchableText = `${event.title} ${event.place} ${event.city} ${event.category} ${event.description}`.toLowerCase()
@@ -748,7 +800,7 @@ function HomePage({ onNavigate, currentUser }) {
           <div className="location-copy">
             <span className="event-category">EVENTS NEAR</span>
             <strong>{selectedLocation?.label || 'Choose your location'}</strong>
-            <p>{showSavedOnly ? 'Saved events from all cities.' : selectedLocation ? 'Showing sample events within 50 km, nearest first.' : 'Set a city or share your location to find nearby events.'} All listings are demo examples.</p>
+            <p>{showSavedOnly ? 'Saved events from all cities.' : selectedLocation ? 'Showing published events and sample listings within 50 km, nearest first.' : 'Set a city or share your location to find nearby events.'} Sample listings are marked on their cards.</p>
           </div>
           <button type="button" onClick={() => { setLocationMessage(''); setIsLocationDialogOpen(true) }}>
             {selectedLocation ? 'Change location' : 'Set location'} <span aria-hidden="true">↗</span>
@@ -773,7 +825,7 @@ function HomePage({ onNavigate, currentUser }) {
                 key={category.value}
                 onClick={() => setActiveCategory(category.value)}
               >
-                {category.label}<span className="filter-count">{category.value === 'ALL' ? events.length : events.filter((item) => item.category === category.value).length}</span>
+                {category.label}<span className="filter-count">{category.value === 'ALL' ? catalogEvents.length : catalogEvents.filter((item) => item.category === category.value).length}</span>
               </button>
             ))}
           </div>
@@ -893,9 +945,10 @@ function EventCard({ event, isSaved, onToggleSave, onSelect }) {
         <span className="event-info">
           <span className="event-category">{event.category}</span>
           <strong className="event-title">{event.title}</strong>
+          <span className="event-host">Hosted by {event.hostName || 'Tixora sample host'}</span>
           <span className="event-meta">{event.place}</span>
           <span className="event-time">{event.time} <i>·</i> {event.city}</span>
-          {event.distanceKm !== null && <span className="event-distance">{event.distanceKm.toFixed(1)} km away</span>}
+          {event.distanceKm !== null && <span className="event-distance">{formatDistance(event.distanceKm)}</span>}
         </span>
       </button>
       <button
@@ -939,6 +992,7 @@ function EventDetailsPage({ event, currentUser, onNavigate }) {
           <div className="event-facts">
             <div><span className="fact-icon">◷</span><p><strong>{event.date} · {event.time}</strong><small>Doors open 30 minutes before</small></p></div>
             <div><span className="fact-icon">⌖</span><p><strong>{event.place}</strong><small>{event.city}, India</small></p></div>
+            <div><span className="fact-icon">♙</span><p><strong>Hosted by {event.hostName || 'Tixora sample host'}</strong><small>Event host</small></p></div>
           </div>
           <div className="event-booking-card">
             <div><span className="event-category">TICKETS</span><strong>{event.ticket}</strong></div>
@@ -946,6 +1000,7 @@ function EventDetailsPage({ event, currentUser, onNavigate }) {
               ? <button className="button button-primary" type="button" disabled>Booking opens soon</button>
               : <button className="button button-primary" type="button" onClick={() => onNavigate('/login')}>Log in to reserve <span>↗</span></button>}
           </div>
+          {Number.isInteger(event.ticketsAvailable) && <p className="booking-note">{event.ticketsAvailable} tickets currently available</p>}
           {currentUser && <p className="booking-note">You’re signed in. Online reservations are coming soon.</p>}
         </div>
       </section>
@@ -1238,6 +1293,7 @@ function OrganizerDashboard({ user, onNavigate }) {
     localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset())
     setForm({
       title: event.title,
+      category: event.category || 'OTHER',
       description: event.description,
       venue: event.venue,
       city: event.city,
@@ -1332,6 +1388,7 @@ function OrganizerDashboard({ user, onNavigate }) {
           </div>
           <form className="organizer-event-form" onSubmit={saveEvent}>
             <label>Event title<input required minLength="3" maxLength="150" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="e.g. Indie music night by the lake" /></label>
+            <label>Genre<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option value="MUSIC">Music</option><option value="COMEDY">Comedy</option><option value="ART & CULTURE">Art & culture</option><option value="FOOD & DRINK">Food & drink</option><option value="NIGHTLIFE">Nightlife</option><option value="WORKSHOPS">Workshops</option><option value="OTHER">Other</option></select></label>
             <label>About the event<textarea required maxLength="5000" rows="4" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What can guests look forward to?" /></label>
             <div className="organizer-form-row">
               <label>Venue<input required maxLength="200" value={form.venue} onChange={(event) => setForm({ ...form, venue: event.target.value })} placeholder="Venue name" /></label>
@@ -1383,7 +1440,7 @@ function emptyOrganizerEventForm() {
   const suggestedDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
   suggestedDate.setMinutes(suggestedDate.getMinutes() - suggestedDate.getTimezoneOffset())
   return {
-    title: '', description: '', venue: '', city: '',
+    title: '', category: 'OTHER', description: '', venue: '', city: '',
     startsAt: suggestedDate.toISOString().slice(0, 16),
     imageUrl: '', ticketCapacity: '50', ticketPrice: '0', status: 'draft',
   }
