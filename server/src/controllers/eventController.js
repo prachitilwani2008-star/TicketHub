@@ -195,6 +195,37 @@ export async function getPublicEvent(request, response) {
   return response.status(200).json({ event: publicEventResponse(result.rows[0]) })
 }
 
+export async function listPublicTicketTypes(request, response) {
+  const eventId = parseEventId(request.params.eventId)
+  if (!eventId) return response.status(400).json({ error: 'Event ID must be a positive whole number.' })
+
+  const result = await pool.query(
+    `SELECT tt.ticket_type_id, tt.name, tt.price,
+            GREATEST(tt.total_quantity - tt.sold_quantity, 0)::int AS tickets_available
+     FROM ticket_types tt
+     JOIN events e ON e.event_id = tt.event_id
+     WHERE e.event_id = $1 AND e.status = 'published' AND e.starts_at > NOW()
+     ORDER BY tt.price ASC, tt.ticket_type_id ASC`,
+    [eventId],
+  )
+  if (result.rowCount === 0) {
+    const event = await pool.query(
+      `SELECT 1 FROM events WHERE event_id = $1 AND status = 'published' AND starts_at > NOW()`,
+      [eventId],
+    )
+    if (event.rowCount === 0) return response.status(404).json({ error: 'Event not found.' })
+  }
+
+  return response.status(200).json({
+    ticketTypes: result.rows.map((ticketType) => ({
+      id: ticketType.ticket_type_id,
+      name: ticketType.name,
+      price: Number(ticketType.price),
+      ticketsAvailable: ticketType.tickets_available,
+    })),
+  })
+}
+
 export async function getOrganizerEvent(request, response) {
   const eventId = parseEventId(request.params.eventId)
   if (!eventId) return response.status(400).json({ error: 'Event ID must be a positive whole number.' })
